@@ -25,9 +25,11 @@ interface DrumSet {
 
 const drumSet: DrumSet = {};
 
-console.log(Tone.getTransport());
-
 let triggers: Tone.Loop[] = [];
+
+setInterval(() => {
+  console.log("#triggers: " + triggers.length);
+}, 3000);
 
 export const Sequencer = ({ initialLoop }: Props) => {
   // const WIDTH = 600;
@@ -91,10 +93,8 @@ export const Sequencer = ({ initialLoop }: Props) => {
         if (step.on) {
           console.log("added a trigger");
           const trigger = new Tone.Loop((time) => {
-            drumSet[track.sample].start(
-              time + Tone.Time("16n").toSeconds() * step.stepNo,
-            );
-          }, "1m").start(0);
+            drumSet[track.sample].start(time);
+          }, "1m").start(Tone.Time("16n").toSeconds() * step.stepNo);
 
           newTriggers.push(trigger);
         }
@@ -113,20 +113,22 @@ export const Sequencer = ({ initialLoop }: Props) => {
   useEffect(() => {
     for (const track of loop) {
       if (!(track.sample in drumSet)) {
-        drumSet[track.sample] = new Tone.Player(`/audio/${track.sample}`).toDestination();
-        console.log("added " + track.sample);
+        drumSet[track.sample] = new Tone.Player(
+          `/audio/${track.sample}`,
+        ).toDestination();
       }
     }
   }, [loop]);
 
   useEffect(() => {
+    console.log(Tone.getTransport().state);
     if (playing && Tone.getTransport().state !== "started") {
       Tone.loaded().then(() => {
         Tone.getTransport().bpm.value = 128;
-        Tone.getTransport().start(0);
-        console.log("should be playing");
+        Tone.getTransport().start();
       });
     } else if (!playing && Tone.getTransport().state == "started") {
+      Tone.getTransport().cancel(Tone.now());
       Tone.getTransport().stop();
     }
   }, [playing]);
