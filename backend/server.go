@@ -41,15 +41,44 @@ type UserCredentials struct {
 var db *sql.DB
 var Store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
+// ------------ auths ---------------
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var user UserCredentials
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve the user from the database
+	result := db.QueryRow("SELECT password FROM users WHERE username = $1", user.Username)
+	storedPassword := ""
+	err = result.Scan(&storedPassword)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Compare the stored hashed password, with the hashed version of the password that was received
+	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password)); err != nil {
+		http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
+		return
+	}
+
+	session, _ := Store.Get(r, "session-name")
+	session.Values["username"] = user.Username
+
+	session.Save(r, w)
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
+}
+
 // test
 
-var (
-	key   = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
-)
-
 func setSessionHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session-name")
+	session, _ := Store.Get(r, "session-name")
 	session.Values["foo"] = "bar"
 	session.Save(r, w)
 
@@ -57,7 +86,7 @@ func setSessionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkSessionHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session-name")
+	session, _ := Store.Get(r, "session-name")
 
 	fooValue := session.Values["foo"]
 	if fooValue == nil {
@@ -101,7 +130,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// You need to restore the body content after reading it
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		lrw := NewLoggingResponseWriter(w)
@@ -121,7 +149,6 @@ type LoggingResponseWriter struct {
 }
 
 func NewLoggingResponseWriter(w http.ResponseWriter) *LoggingResponseWriter {
-    // Write the status code if WriteHeader is not called
     return &LoggingResponseWriter{w, http.StatusOK}
 }
 
@@ -130,7 +157,19 @@ func (lrw *LoggingResponseWriter) WriteHeader(code int) {
     lrw.ResponseWriter.WriteHeader(code)
 }
 
+func init() {
+    Store.Options = &sessions.Options{
+        Domain:   "34.130.164.179",
+        Path:     "/",
+        MaxAge:   3600 * 8, // 8 hours
+        HttpOnly: true,
+        Secure:   false,
+        SameSite: http.SameSiteNoneMode,
+    }
+}
+
 func main() {
+
 	connStr := "user=postgres dbname=mydb password=postgres host=localhost sslmode=disable"
 	var err error
 	db, err = sql.Open("postgres", connStr)
@@ -141,9 +180,6 @@ func main() {
 
 	router := mux.NewRouter()
     router.Use(loggingMiddleware)
-
-    // Auth routes
-    router.HandleFunc("/api/login", LoginHandler).Methods("POST")
 
     authRouter := router.PathPrefix("/api").Subrouter()
     authRouter.Use(RequireLogin)
@@ -162,42 +198,13 @@ func main() {
     router.HandleFunc("/set", setSessionHandler).Methods("GET")
     router.HandleFunc("/check", checkSessionHandler).Methods("GET")
 
+    // Auth routes
+    router.HandleFunc("/login", LoginHandler).Methods("POST")
+
     log.Fatal(http.ListenAndServe(":8080", router))
 
 }
 
-// ------------ auths ---------------
-
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var user UserCredentials
-
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Retrieve the user from the database
-	result := db.QueryRow("SELECT password FROM users WHERE username = $1", user.Username)
-	storedPassword := ""
-	err = result.Scan(&storedPassword)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Compare the stored hashed password, with the hashed version of the password that was received
-	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password)); err != nil {
-		http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
-		return
-	}
-
-	session, _ := Store.Get(r, "session-name")
-	session.Values["username"] = user.Username
-	session.Save(r, w)
-
-	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
-}
 
 // ------------ users -----------------
 
