@@ -1,4 +1,5 @@
-import { LoopJson, Sequencer } from "@/components/sequencer";
+import { LoopEditor } from "@/components/loop-editor";
+import { LoopJson } from "@/components/sequencer";
 
 export default function Home() {
   const initialLoop: LoopJson = [
@@ -11,7 +12,7 @@ export default function Home() {
   return (
     <>
       <h1>grooove</h1>
-      <Sequencer initialLoop={initialLoop} />
+      <LoopEditor initialLoop={initialLoop} />
     </>
   );
 }

@@ -1,6 +1,4 @@
-"use client";
-
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, SetStateAction, Dispatch } from "react";
 import {
   Application,
   Assets,
@@ -9,14 +7,17 @@ import {
   Sprite,
   Texture,
 } from "pixi.js";
-import { Button } from "@nextui-org/button";
 import * as Tone from "tone";
+import { initDevtools } from "@pixi/devtools";
 
-type TrackJson = { sample: string; sequence: boolean[] };
+export type TrackJson = { sample: string; sequence: boolean[] };
 export type LoopJson = TrackJson[];
 
 interface Props {
-  initialLoop: LoopJson;
+  loop: LoopJson;
+  setLoop: Dispatch<SetStateAction<LoopJson>>;
+  playing: boolean;
+  bpm: number;
 }
 
 interface DrumSet {
@@ -27,17 +28,16 @@ const drumSet: DrumSet = {};
 
 let triggers: Tone.Loop[] = [];
 
-setInterval(() => {
-  console.log("#triggers: " + triggers.length);
-}, 3000);
+const masterVolume = new Tone.Volume(-10).toDestination();
 
-export const Sequencer = ({ initialLoop }: Props) => {
+/**
+ * The sequencer in a pixi.js canvas
+ */
+export const Sequencer = ({ loop, setLoop, playing }: Props) => {
   // const WIDTH = 600;
   // const HEIGHT = 400;
   const pixiContainer = useRef<HTMLDivElement>(null!);
   const appRef = useRef<Application<Renderer>>(null!);
-  const [playing, setPlaying] = useState(false);
-  const [loop, setLoop] = useState(initialLoop);
 
   const [pixiInitialized, setPixiInitialized] = useState(false);
   const [textureLoaded, setTextureLoaded] = useState(false);
@@ -48,16 +48,17 @@ export const Sequencer = ({ initialLoop }: Props) => {
         appRef.current = new Application();
         await appRef.current.init({
           background: "#FFFFFF",
-          // resizeTo: pixiContainer.current,
+          resizeTo: pixiContainer.current,
         });
+        initDevtools({ app: appRef.current });
 
         // Attach the canvas to the container
         if (pixiContainer.current) {
           pixiContainer.current.appendChild(appRef.current.canvas);
         }
+        setPixiInitialized(true);
       }
     })();
-    setPixiInitialized(true);
   }, []);
 
   useEffect(() => {
@@ -83,6 +84,9 @@ export const Sequencer = ({ initialLoop }: Props) => {
     appRef.current.stage.removeChildren();
     appRef.current.stage.addChild(drumloop.container);
 
+    drumloop.container.x = appRef.current.screen.width / 2;
+    drumloop.container.y = appRef.current.screen.height / 2;
+
     for (const trigger of triggers) {
       trigger.stop();
     }
@@ -91,7 +95,6 @@ export const Sequencer = ({ initialLoop }: Props) => {
     drumloop.tracks.forEach((track) => {
       track.steps.forEach((step) => {
         if (step.on) {
-          console.log("added a trigger");
           const trigger = new Tone.Loop((time) => {
             drumSet[track.sample].start(time);
           }, "1m").start(Tone.Time("16n").toSeconds() * step.stepNo);
@@ -115,13 +118,12 @@ export const Sequencer = ({ initialLoop }: Props) => {
       if (!(track.sample in drumSet)) {
         drumSet[track.sample] = new Tone.Player(
           `/audio/${track.sample}`,
-        ).toDestination();
+        ).connect(masterVolume);
       }
     }
   }, [loop]);
 
   useEffect(() => {
-    console.log(Tone.getTransport().state);
     if (playing && Tone.getTransport().state !== "started") {
       Tone.loaded().then(() => {
         Tone.getTransport().bpm.value = 128;
@@ -133,16 +135,7 @@ export const Sequencer = ({ initialLoop }: Props) => {
     }
   }, [playing]);
 
-  function togglePlaying() {
-    setPlaying(!playing);
-  }
-
-  return (
-    <>
-      <Button onClick={togglePlaying}>{playing ? "STOP" : "PLAY"}</Button>
-      <div ref={pixiContainer} />
-    </>
-  );
+  return <div ref={pixiContainer} className="w-[800px] h-[300px]" />;
 };
 
 class Drumloop {
@@ -155,6 +148,9 @@ class Drumloop {
     this.tracks.forEach((track) => {
       this.container.addChild(track.container);
     });
+    const size = this.container.getSize();
+
+    this.container.pivot.set(size.width / 2, size.height / 2);
   }
 }
 
