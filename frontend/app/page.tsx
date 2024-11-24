@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <>
       <h1>grooove</h1>
-      <LoopEditor initialLoop={initialLoop} />
+      <LoopEditor initialBpm={128} initialLoop={initialLoop} />
     </>
   );
 }
