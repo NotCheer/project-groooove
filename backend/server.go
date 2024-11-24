@@ -13,6 +13,7 @@ import (
    	"fmt"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	_ "github.com/go-playground/validator/v10"
@@ -44,35 +45,35 @@ var Store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 // ------------ auths ---------------
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var user UserCredentials
+        var user UserCredentials
 
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+        err := json.NewDecoder(r.Body).Decode(&user)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
 
-	// Retrieve the user from the database
-	result := db.QueryRow("SELECT password FROM users WHERE username = $1", user.Username)
-	storedPassword := ""
-	err = result.Scan(&storedPassword)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+        // Retrieve the user from the database
+        result := db.QueryRow("SELECT password FROM users WHERE username = $1", user.Username)
+        storedPassword := ""
+        err = result.Scan(&storedPassword)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
 
-	// Compare the stored hashed password, with the hashed version of the password that was received
-	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password)); err != nil {
-		http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
-		return
-	}
+        // Compare the stored hashed password, with the hashed version of the password that was received
+        if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password)); err != nil {
+            http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
+            return
+        }
 
-	session, _ := Store.Get(r, "session-name")
-	session.Values["username"] = user.Username
+        session, _ := Store.Get(r, "session-name")
+        session.Values["username"] = user.Username
 
-	session.Save(r, w)
+        session.Save(r, w)
 
-	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
+        json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
 }
 
 // test
@@ -159,7 +160,7 @@ func (lrw *LoggingResponseWriter) WriteHeader(code int) {
 
 func init() {
     Store.Options = &sessions.Options{
-        Domain:   "34.130.164.179",
+        Domain:   "http://34.130.164.179:3000",
         Path:     "/",
         MaxAge:   3600 * 8, // 8 hours
         HttpOnly: true,
@@ -186,7 +187,6 @@ func main() {
 
     // User routes
     authRouter.HandleFunc("/users", getUsers).Methods("GET")
-    authRouter.HandleFunc("/users", createUser).Methods("POST")
 
     // Loop routes
     authRouter.HandleFunc("/loops", createLoop).Methods("POST")
@@ -200,8 +200,17 @@ func main() {
 
     // Auth routes
     router.HandleFunc("/login", LoginHandler).Methods("POST")
+    router.HandleFunc("/users", createUser).Methods("POST")
 
-    log.Fatal(http.ListenAndServe(":8080", router))
+    // Setup CORS
+    	cors := handlers.CORS(
+    		handlers.AllowedOrigins([]string{"http://34.130.164.179:3000"}),
+    		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+    		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+    		handlers.AllowCredentials(),
+    	)
+
+    log.Fatal(http.ListenAndServe(":8080", cors(router)))
 
 }
 
