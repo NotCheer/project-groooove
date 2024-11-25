@@ -95,14 +95,15 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
     })();
   }, []);
 
-  //Fix aspect ratio of the canvas container
-  useEffect(() => {
+  function fixAspectRatio() {
     if (pixiContainer.current) {
       const width = pixiContainer.current.offsetWidth;
 
       pixiContainer.current.style.height = `${(width / (16 * 160)) * (4 * 240)}px`;
     }
-  });
+  }
+  //Fix aspect ratio of the canvas container
+  useEffect(fixAspectRatio);
 
   useEffect(() => {
     (async () => {
@@ -136,7 +137,7 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
         app.screen.width / 16,
         app.screen.height,
       )
-      .fill({ color: "FFFFFF", alpha: 0.2 });
+      .fill({ color: "f7a278", alpha: 0.6 });
 
     playheadContainerRef.current.removeChildren();
     playheadContainerRef.current.addChild(playhead);
@@ -206,18 +207,18 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
   }, [playing]);
 
   return (
-    <div className="flex flex-row">
-      <div className="flex flex-col justify-around mr-2">
+    <div className="flex flex-row flex-grow-0">
+      <div className="flex flex-col justify-around mr-2 flex-grow-0 min-w-32">
         {loop.map((track) => (
           <div
             key={track.sample}
-            className="text-center basis-0 flex-grow flex flex-col justify-center"
+            className="text-center basis-0 flex-grow flex flex-col justify-center flex-nowrap"
           >
             {sampleToName[track.sample]}
           </div>
         ))}
       </div>
-      <div ref={pixiContainer} className="w-[600px]" />
+      <div ref={pixiContainer} className="flex-grow flex-shrink" />
     </div>
   );
 };

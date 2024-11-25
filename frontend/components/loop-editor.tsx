@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, CardBody, CardHeader, Input } from "@nextui-org/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Divider,
+  Input,
+} from "@nextui-org/react";
 
 import { LoopJson, Sequencer } from "@/components/sequencer";
 
@@ -37,39 +44,40 @@ export const LoopEditor = ({ initialLoop, initialBpm }: Props) => {
   return (
     <>
       <Card>
-        <CardHeader>Loop Editor</CardHeader>
+        <CardHeader>
+          <h2 className="font-bold text-2xl pl-1">Loop Editor</h2>
+        </CardHeader>
+        <Divider />
         <CardBody className="gap-4">
           <Input isRequired label="Title" size="sm" type="text" />
           <Input isRequired label="Author" size="sm" type="text" />
+          <Card>
+            <CardBody className="gap-4 flex justify-center">
+              <div className="flex flex-row justify-between gap-4">
+                <Button onClick={togglePlaying}>
+                  {playing ? "STOP" : "PLAY"}
+                </Button>
+                <Input
+                  isInvalid={!bpmIsvalid}
+                  label="BPM"
+                  labelPlacement="outside-left"
+                  size="sm"
+                  type="number"
+                  value={`${inputBpm}`}
+                  onValueChange={handleBpmInput}
+                />
+              </div>
+              <Sequencer
+                bpm={bpm}
+                loop={loop}
+                playing={playing}
+                setLoop={setLoop}
+              />
+            </CardBody>
+          </Card>
           <Button>SAVE</Button>
         </CardBody>
       </Card>
-      <div className="flex justify-center mt-4">
-        <Card>
-          <CardBody className="gap-4">
-            <div className="flex flex-row justify-between gap-4">
-              <Button onClick={togglePlaying}>
-                {playing ? "STOP" : "PLAY"}
-              </Button>
-              <Input
-                isInvalid={!bpmIsvalid}
-                label="BPM"
-                labelPlacement="outside-left"
-                size="sm"
-                type="number"
-                value={`${inputBpm}`}
-                onValueChange={handleBpmInput}
-              />
-            </div>
-            <Sequencer
-              bpm={bpm}
-              loop={loop}
-              playing={playing}
-              setLoop={setLoop}
-            />
-          </CardBody>
-        </Card>
-      </div>
     </>
   );
 };
