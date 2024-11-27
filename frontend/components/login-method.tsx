@@ -1,13 +1,15 @@
 "use client";
 
-import { Button, Card, CardBody, CardHeader } from "@nextui-org/react";
+import { Button, Card, CardBody, CardHeader, Link } from "@nextui-org/react";
 
 export const LoginMethod = () => {
   return (
-    <Card>
+    <Card className="w-full max-w-xl m-auto">
       <CardHeader>Login</CardHeader>
       <CardBody className="gap-4">
-        <Button>Log in with Email</Button>
+        <Button as={Link} href="/login/email">
+          Log in with Email
+        </Button>
         <Button>Log in with Google</Button>
       </CardBody>
     </Card>

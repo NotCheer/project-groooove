@@ -37,11 +37,14 @@ export const LoopPlayer = ({
     <>
       <Card>
         <CardBody className="gap-4 flex justify-center">
-          <div className="flex flex-row justify-start gap-4">
+          <div className="flex flex-row justify-between items-center gap-4">
             <Button onClick={togglePlaying}>{playing ? "STOP" : "PLAY"}</Button>
-            <p className="text-lg font-bold">
-              {loopInfo.title} by {loopInfo.author}
+            <p className="text-lg ">
+              <b>{loopInfo.title}</b> by <b>{loopInfo.author}</b>
             </p>
+            <p> {loopInfo.bpm} BPM</p>
+            <div className="basis-0 flex-grow" />
+            <Button>REMIX</Button>
           </div>
           <Sequencer
             bpm={loopInfo.bpm}

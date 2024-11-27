@@ -1,9 +1,9 @@
-import { EmailLoginForm } from "@/components/email-login-form";
+import { LoginMethod } from "@/components/login-method";
 
 export default function Login() {
   return (
     <>
-      <EmailLoginForm />
+      <LoginMethod />
     </>
   );
 }
