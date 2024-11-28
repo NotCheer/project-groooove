@@ -1,16 +1,9 @@
 "use client";
 
-import { Button, Card, CardBody } from "@nextui-org/react";
+import { Button, Card, CardBody, Link } from "@nextui-org/react";
 
-import { LoopJson, Sequencer } from "@/components/sequencer";
-
-export interface LoopInfoJson {
-  id: string;
-  title: string;
-  author: string;
-  loop: LoopJson;
-  bpm: number;
-}
+import { Sequencer } from "@/components/sequencer";
+import { LoopInfoJson } from "@/types";
 
 interface Props {
   loopInfo: LoopInfoJson;
@@ -44,7 +37,9 @@ export const LoopPlayer = ({
             </p>
             <p> {loopInfo.bpm} BPM</p>
             <div className="basis-0 flex-grow" />
-            <Button>REMIX</Button>
+            <Button as={Link} href={`/remix/${loopInfo.id}`}>
+              REMIX
+            </Button>
           </div>
           <Sequencer
             bpm={loopInfo.bpm}

@@ -12,7 +12,14 @@ import {
 import { LoopEditor } from "@/components/loop-editor";
 import { LoopJson } from "@/types";
 
-export default function Create() {
+type Prop = {
+  params: {
+    loopId: string;
+  };
+};
+
+export default function Create({ params: { loopId } }: Prop) {
+  console.log("editing loop with ID = " + loopId);
   const initialLoop: LoopJson = [
     { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },
     { sample: "house_snare.wav", sequence: Array<boolean>(16).fill(false) },
@@ -28,13 +35,8 @@ export default function Create() {
         </CardHeader>
         <Divider />
         <CardBody className="gap-4">
-          <Input
-            isRequired
-            label="Title"
-            placeholder="Give your loop a cool name!"
-            size="lg"
-            type="text"
-          />
+          <Input isRequired label="Title" size="sm" type="text" />
+          <Input isRequired label="Author" size="sm" type="text" />
           <LoopEditor initialBpm={128} initialLoop={initialLoop} />
           <Button>SAVE</Button>
         </CardBody>

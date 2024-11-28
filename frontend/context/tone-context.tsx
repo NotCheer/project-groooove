@@ -2,28 +2,31 @@
 
 import React, {
   createContext,
-  useRef,
   ReactNode,
-  MutableRefObject,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 import * as Tone from "tone";
 
-type ToneRef = {
-  output: Tone.InputNode;
-};
-
-type ToneContextType = MutableRefObject<ToneRef>;
-
-export const ToneContext = createContext<ToneContextType>(null!);
+export const ToneContext = createContext<Tone.InputNode>(null!);
 
 export const ToneContextProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const toneRef = useRef<ToneRef>({
-    output: new Tone.Volume(-10).toDestination(),
-  });
+  // const [output, setOutput] = useState<Tone.InputNode>(null!);
+  const outputRef = useRef<Tone.InputNode>(null!);
+  const [isOutputCreated, setIsOutputCreated] = useState(false);
+
+  useEffect(() => {
+    if (!isOutputCreated)
+      outputRef.current = new Tone.Volume(-10).toDestination();
+    setIsOutputCreated(true);
+  }, []);
 
   return (
-    <ToneContext.Provider value={toneRef}>{children}</ToneContext.Provider>
+    <ToneContext.Provider value={outputRef.current}>
+      {isOutputCreated && children}
+    </ToneContext.Provider>
   );
 };

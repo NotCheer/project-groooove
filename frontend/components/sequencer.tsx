@@ -15,13 +15,11 @@ import {
   Sprite,
   Texture,
 } from "pixi.js";
-import * as Tone from "tone";
 import { initDevtools } from "@pixi/devtools";
+import * as Tone from "tone";
 
 import { ToneContext } from "@/context/tone-context";
-
-export type TrackJson = { sample: string; sequence: boolean[] };
-export type LoopJson = TrackJson[];
+import { LoopJson, TrackJson } from "@/types";
 
 interface Props {
   loop: LoopJson;
@@ -49,8 +47,6 @@ let triggers: Tone.Loop[] = [];
  * The sequencer in a pixi.js canvas
  */
 export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
-  // const WIDTH = 600;
-  // const HEIGHT = 400;
   const pixiContainer = useRef<HTMLDivElement>(null!);
   const appRef = useRef<Application<Renderer>>(null!);
   const playheadContainerRef = useRef<Container>(null!);
@@ -61,7 +57,7 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
   const [pixiInitialized, setPixiInitialized] = useState(false);
   const [textureLoaded, setTextureLoaded] = useState(false);
   const [playheadPosition, setPlayheadPosition] = useState(0);
-  const toneRef = useContext(ToneContext);
+  const toneOutput = useContext(ToneContext);
 
   useEffect(() => {
     if (!playheadLoopRef.current) {
@@ -185,7 +181,7 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
       if (!(track.sample in drumSet)) {
         drumSet[track.sample] = new Tone.Player(
           `/audio/${track.sample}`,
-        ).connect(toneRef.current.output);
+        ).connect(toneOutput);
       }
     }
   }, [loop]);

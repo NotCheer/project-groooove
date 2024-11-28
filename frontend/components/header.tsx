@@ -9,11 +9,8 @@ import {
   Button,
 } from "@nextui-org/react";
 import { usePathname } from "next/navigation";
-import { Shrikhand } from "next/font/google";
 
-const shrikhand = Shrikhand({
-  weight: "400",
-});
+import { shrikhand } from "@/config/fonts";
 
 export const Header = () => {
   const pathname = usePathname();

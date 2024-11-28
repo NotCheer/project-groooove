@@ -21,7 +21,20 @@ module.exports = {
       themes: {
         light: {
           colors: {
-            foreground: "#401f0d",
+            foreground: {
+              50: "#fef9f6",
+              100: "#fdf2ed",
+              200: "#fae3d6",
+              300: "#f8d3bf",
+              400: "#f6c6ac",
+              500: "#f1a67e",
+              600: "#ed8d5a",
+              700: "#d85b18",
+              800: "#933e10",
+              900: "#451d08",
+              DEFAULT: "#401F0D",
+              foreground: "#fef9f6",
+            },
             background: {
               DEFAULT: "#fdf9f6",
               foreground: "#401f0d",
@@ -32,7 +45,7 @@ module.exports = {
             content4: "#f3d4c3",
             default: {
               50: "#fdf9f6",
-              100: "#fcf3ee",
+              100: "#fcf1ec",
               200: "#f7e3d9",
               300: "#f3d4c3",
               400: "#f0c8b2",
