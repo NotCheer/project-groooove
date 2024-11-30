@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Button,
   Card,
@@ -17,8 +15,8 @@ import { LoopInfoJson } from "@/types";
 interface Props {
   loopInfo: LoopInfoJson;
   playing: boolean;
-  setPlaying: Function;
-  stopPlaying: Function;
+  setPlaying: () => void;
+  stopPlaying: () => void;
 }
 
 export const LoopPlayer = ({

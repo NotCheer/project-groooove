@@ -7,7 +7,7 @@ import { LoopJson } from "@/types";
 
 type Prop = {
   params: {
-    loopId: string;
+    loopId: number;
   };
 };
 

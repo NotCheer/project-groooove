@@ -14,7 +14,6 @@ export const ToneContext = createContext<Tone.InputNode>(null!);
 export const ToneContextProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  // const [output, setOutput] = useState<Tone.InputNode>(null!);
   const outputRef = useRef<Tone.InputNode>(null!);
   const [isOutputCreated, setIsOutputCreated] = useState(false);
 
