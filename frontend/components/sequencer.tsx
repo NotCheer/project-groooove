@@ -32,16 +32,12 @@ interface DrumSet {
   [key: string]: Tone.Player;
 }
 
-const drumSet: DrumSet = {};
-
 const sampleToName: { [key: string]: string } = {
   "house_kick.wav": "Kick",
   "house_snare.wav": "Snare",
   "closed_hh.wav": "Closed Hi-hat",
   "open_hh.wav": "Open Hi-hat",
 };
-
-let triggers: Tone.Loop[] = [];
 
 /**
  * The sequencer in a pixi.js canvas
@@ -51,6 +47,8 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
   const appRef = useRef<Application<Renderer>>(null!);
   const playheadContainerRef = useRef<Container>(null!);
   const drumloopContainerRef = useRef<Container>(null!);
+  const drumSet = useRef({} as DrumSet);
+  const triggers = useRef([] as Tone.Loop[]);
 
   const playheadLoopRef = useRef<Tone.Loop>(null!);
 
@@ -139,6 +137,13 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
     playheadContainerRef.current.addChild(playhead);
   }, [pixiInitialized, playing, playheadPosition]);
 
+  const stopAllTriggers = () => {
+    for (const trigger of triggers.current) {
+      trigger.stop();
+      trigger.dispose();
+    }
+  };
+
   useEffect(() => {
     if (!pixiInitialized || !textureLoaded) {
       return;
@@ -151,17 +156,8 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
     drumloop.container.height = app.screen.height;
     drumloop.container.width = app.screen.width;
 
-    const newTriggers: Tone.Loop[] = [];
-
     drumloop.tracks.forEach((track) => {
       track.steps.forEach((step) => {
-        if (step.on) {
-          const trigger = new Tone.Loop((time) => {
-            drumSet[track.sample].start(time);
-          }, "1m").start(Tone.Time("16n").toSeconds() * step.stepNo);
-
-          newTriggers.push(trigger);
-        }
         step.sprite.on("pointertap", () => {
           const newLoop = structuredClone(loop);
 
@@ -170,16 +166,32 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
         });
       });
     });
-    for (const trigger of triggers) {
-      trigger.stop();
-    }
-    triggers = newTriggers;
   }, [pixiInitialized, textureLoaded, loop]);
 
   useEffect(() => {
+    if (playing) {
+      const newTriggers: Tone.Loop[] = [];
+
+      loop.forEach((track) => {
+        track.sequence.forEach((step, stepNo) => {
+          if (step) {
+            const trigger = new Tone.Loop((time) => {
+              drumSet.current[track.sample].start(time);
+            }, "1m").start(Tone.Time("16n").toSeconds() * stepNo);
+
+            newTriggers.push(trigger);
+          }
+        });
+      });
+      stopAllTriggers();
+      triggers.current = newTriggers;
+    }
+  }, [loop, playing]);
+
+  useEffect(() => {
     for (const track of loop) {
-      if (!(track.sample in drumSet)) {
-        drumSet[track.sample] = new Tone.Player(
+      if (!(track.sample in drumSet.current)) {
+        drumSet.current[track.sample] = new Tone.Player(
           `/audio/${track.sample}`,
         ).connect(toneOutput);
       }
@@ -187,20 +199,32 @@ export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
   }, [loop]);
 
   useEffect(() => {
-    Tone.getTransport().bpm.value = bpm;
-  }, [bpm]);
+    if (playing) {
+      Tone.getTransport().bpm.value = bpm;
+    }
+  }, [bpm, playing]);
 
   useEffect(() => {
-    if (playing && Tone.getTransport().state !== "started") {
+    if (playing) {
       Tone.loaded().then(() => {
+        Tone.getTransport().stop();
+        setPlayheadPosition(0);
         Tone.getTransport().start();
       });
     } else if (!playing && Tone.getTransport().state == "started") {
-      Tone.getTransport().cancel(Tone.now());
-      Tone.getTransport().stop();
-      setPlayheadPosition(0);
+      stopAllTriggers();
     }
   }, [playing]);
+
+  // Clean up after unmounting
+  useEffect(() => {
+    return () => {
+      for (const track of loop) {
+        drumSet.current[track.sample].stop();
+      }
+      stopAllTriggers();
+    };
+  }, []);
 
   return (
     <div className="flex flex-row flex-grow-0">
