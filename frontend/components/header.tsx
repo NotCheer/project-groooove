@@ -7,8 +7,10 @@ import {
   NavbarItem,
   Link,
   Button,
+  cn,
 } from "@nextui-org/react";
 import { usePathname } from "next/navigation";
+import NextLink from "next/link";
 
 import { shrikhand } from "@/config/fonts";
 
@@ -26,14 +28,16 @@ export const Header = () => {
   return (
     <Navbar isBordered>
       <NavbarBrand>
-        <h1
-          className={
-            shrikhand.className +
-            " text-2xl bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-yellow-400 px-1"
-          }
-        >
-          Grooove
-        </h1>
+        <NextLink href="/">
+          <p
+            className={cn(
+              shrikhand.className,
+              "text-2xl bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-yellow-400 px-1",
+            )}
+          >
+            Grooove
+          </p>
+        </NextLink>
       </NavbarBrand>
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
         <NavbarItem isActive={getIsActive("/")}>
