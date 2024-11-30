@@ -1,7 +1,7 @@
 "use client";
 
 import {verify} from "@/util/api";
-import { Button } from '@nextui-org/react'
+import {Button, Link} from '@nextui-org/react'
 import { useGoogleLogin } from '@react-oauth/google';
 
 
@@ -16,6 +16,6 @@ export const GoogleOauth = () => {
     flow: 'auth-code',
   });
   return (
-    <Button onClick={() => login()}>Sign in with Google 🚀</Button>
+    <Button onClick={() => login()} size={"lg"}>Log in with Google 🚀</Button>
   )
 }
