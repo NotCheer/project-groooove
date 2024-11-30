@@ -8,6 +8,6 @@ type User struct {
 }
 
 type UserCredentials struct {
-    Username string
+    Email string
     Password string
 }

@@ -20,7 +20,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    result := db.DB.QueryRow("SELECT password FROM users WHERE username = $1", user.Username)
+    result := db.DB.QueryRow("SELECT password FROM users WHERE email = $1", user.Email)
     storedPassword := ""
     err = result.Scan(&storedPassword)
     if err != nil {
@@ -34,7 +34,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     sess, _ := session.GetSession(r)
-    sess.Values["username"] = user.Username
+    sess.Values["email"] = user.Email
 
     session.SaveSession(w, r, sess)
 

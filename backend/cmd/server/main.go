@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -50,6 +51,9 @@ func main() {
         		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
         		handlers.AllowCredentials(),
         	)
+
+        log.Printf("session_key: %s\n gClientID: %s\n, gClientSecret: %s\n", os.Getenv("SESSION_KEY"),
+         os.Getenv("GOOGLE_OAUTH_CLIENT_ID"), os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"))
 
 	log.Fatal(http.ListenAndServe(":8080", cors(router)))
 }
