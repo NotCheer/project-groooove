@@ -2,7 +2,7 @@ import axios from "axios";
 import { CodeResponse } from "@react-oauth/google";
 
 
-const API_BASE_URL = process.env.BASE_URL || "https://api.groooove.me";
+const API_BASE_URL = process.env.BASE_URL || "http://groooove.me:8080";
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,

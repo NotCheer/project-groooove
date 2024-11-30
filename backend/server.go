@@ -262,8 +262,8 @@ func init() {
         Path:     "/",
         MaxAge:   3600 * 8, // 8 hours
         HttpOnly: true,
-        Secure:   true,
-        SameSite: http.SameSiteNoneMode,
+        Secure:   false,
+        SameSite: http.SameSiteLaxMode,
     }
 }
 
@@ -308,7 +308,7 @@ func main() {
 
     // Setup CORS
     	cors := handlers.CORS(
-    		handlers.AllowedOrigins([]string{"http://34.130.164.179:3000", "http://groooove.me:3000", "https://groooove.me"}),
+    		handlers.AllowedOrigins([]string{"http://34.130.164.179:3000", "http://groooove.me:3000", "https://groooove.me", "http://groooove.me"}),
     		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
     		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
     		handlers.AllowCredentials(),
