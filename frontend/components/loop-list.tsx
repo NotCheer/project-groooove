@@ -18,7 +18,7 @@ export const LoopList = ({ loops }: Props) => {
           key={loop.id}
           loopInfo={loop}
           playing={playingId === loop.id}
-          setPlaying={() => {
+          startPlaying={() => {
             setPlayingId(loop.id);
           }}
           stopPlaying={() => setPlayingId(null)}

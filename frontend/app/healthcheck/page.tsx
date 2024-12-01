@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import {healthCheck} from "@/util/api";
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
+
+import { healthCheck } from "@/util/api";
 
 export default function Login() {
-
   const [health, setHealth] = useState<string>("");
 
   useEffect(() => {
-    healthCheck().then(response => {
-      setHealth(response.message)
-      console.log("health:" +  health);
+    healthCheck().then((response) => {
+      setHealth(response.message);
+      console.log("health:" + health);
     });
   }, []);
 

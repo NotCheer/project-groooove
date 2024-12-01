@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, CardBody, Input } from "@nextui-org/react";
+import { Card, CardBody, Input } from "@nextui-org/react";
+
+import { PlayButton } from "./play-button";
 
 import { Sequencer } from "@/components/sequencer";
 import { LoopJson } from "@/types";
@@ -17,10 +19,6 @@ export const LoopEditor = ({ initialLoop, initialBpm }: Props) => {
   const [inputBpm, setInputBpm] = useState(initialBpm);
   const [bpmIsvalid, setBpmIsValid] = useState(bpm > 0);
   const [playing, setPlaying] = useState(false);
-
-  function togglePlaying() {
-    setPlaying(!playing);
-  }
 
   function handleBpmInput(newBpmStr: string) {
     const newBpm = parseInt(newBpmStr);
@@ -39,7 +37,7 @@ export const LoopEditor = ({ initialLoop, initialBpm }: Props) => {
     <Card>
       <CardBody className="gap-4 flex justify-center">
         <div className="flex flex-row justify-between gap-4">
-          <Button onClick={togglePlaying}>{playing ? "STOP" : "PLAY"}</Button>
+          <PlayButton playing={playing} setPlaying={setPlaying} />
           <Input
             isInvalid={!bpmIsvalid}
             label="BPM"

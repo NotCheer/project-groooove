@@ -8,6 +8,7 @@ import {
 } from "@nextui-org/react";
 
 import { RateModal } from "./rate-modal";
+import { PlayButton } from "./play-button";
 
 import { Sequencer } from "@/components/sequencer";
 import { LoopInfoJson } from "@/types";
@@ -15,19 +16,19 @@ import { LoopInfoJson } from "@/types";
 interface Props {
   loopInfo: LoopInfoJson;
   playing: boolean;
-  setPlaying: () => void;
+  startPlaying: () => void;
   stopPlaying: () => void;
 }
 
 export const LoopPlayer = ({
   loopInfo,
   playing,
-  setPlaying,
+  startPlaying,
   stopPlaying,
 }: Props) => {
-  function togglePlaying() {
-    if (!playing) {
-      setPlaying();
+  function setPlaying(playing: boolean) {
+    if (playing) {
+      startPlaying();
     } else {
       stopPlaying();
     }
@@ -40,7 +41,7 @@ export const LoopPlayer = ({
       <Card>
         <CardBody className="gap-4 flex justify-center">
           <div className="flex flex-row justify-between items-center gap-4">
-            <Button onPress={togglePlaying}>{playing ? "STOP" : "PLAY"}</Button>
+            <PlayButton playing={playing} setPlaying={setPlaying} />
             <p className="text-lg">
               <b>{loopInfo.title}</b> by <b>{loopInfo.author}</b>
             </p>
