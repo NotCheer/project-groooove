@@ -7,9 +7,11 @@ import (
     "os"
     "context"
     "io/ioutil"
+    "database/sql"
     "golang.org/x/oauth2"
     "golang.org/x/oauth2/google"
     "github.com/UTSCC09/project-groooove/backend/internal/session"
+    "github.com/UTSCC09/project-groooove/backend/internal/db"
 )
 
 var googleOauthConfig = &oauth2.Config{
@@ -24,10 +26,15 @@ const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_
 
 func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
     var requestData struct {
-        Code string `json:"Code"`
+        Code string `json:"code"`
     }
 
-    err := json.NewDecoder(r.Body).Decode(&requestData)
+    r.Body = http.MaxBytesReader(w, r.Body, 1048576) // 1MB limit
+
+    decoder := json.NewDecoder(r.Body)
+
+    err := decoder.Decode(&requestData)
+
     if err != nil || requestData.Code == "" {
         http.Error(w, "Invalid request", http.StatusBadRequest)
         return
@@ -48,6 +55,23 @@ func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Check if user exists in the database
+    result := db.DB.QueryRow("SELECT email FROM users WHERE email = $1", userInfo.Email)
+    storedEmail := ""
+    err = result.Scan(&storedEmail)
+
+    // If user does not exist, create a new user
+    if err == sql.ErrNoRows {
+        _, err := db.DB.Exec("INSERT INTO users (email, username) VALUES ($1, $2)", userInfo.Email, userInfo.Name)
+        if err != nil {
+            http.Error(w, "Failed to create new user", http.StatusInternalServerError)
+            return
+        }
+    } else if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
     sess, _ := session.GetSession(r)
     sess.Values["email"] = userInfo.Email
     sess.Values["name"] = userInfo.Name
@@ -59,6 +83,7 @@ func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
 
     json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
 }
+
 
 func getUserDataFromGoogle(code string) ([]byte, error) {
     token, err := googleOauthConfig.Exchange(context.Background(), code)

@@ -14,9 +14,19 @@ import (
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
     var user models.UserCredentials
 
-    err := json.NewDecoder(r.Body).Decode(&user)
+    r.Body = http.MaxBytesReader(w, r.Body, 1048576)
+
+    decoder := json.NewDecoder(r.Body)
+    decoder.DisallowUnknownFields()
+
+    err := decoder.Decode(&user)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        http.Error(w, "Invalid request payload", http.StatusBadRequest)
+        return
+    }
+
+    if user.Email == "" || user.Password == "" {
+        http.Error(w, "Email and password are required", http.StatusBadRequest)
         return
     }
 

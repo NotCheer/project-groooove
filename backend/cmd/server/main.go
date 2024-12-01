@@ -29,9 +29,11 @@ func main() {
 
 	// Loop routes
 	authRouter.HandleFunc("/loops", apphandlers.CreateLoop).Methods("POST")
-	authRouter.HandleFunc("/loops/{id}", apphandlers.GetLoop).Methods("GET")
+	router.HandleFunc("/api/loops/{id}", apphandlers.GetLoop).Methods("GET")
+	router.HandleFunc("/api/loops", apphandlers.GetLoops).Methods("GET")
 	authRouter.HandleFunc("/loops/{id}", apphandlers.UpdateLoop).Methods("PUT")
 	authRouter.HandleFunc("/loops/{id}", apphandlers.DeleteLoop).Methods("DELETE")
+	authRouter.HandleFunc("/loops/rate/{id}", apphandlers.RateLoop).Methods("POST")
 
 	// Session test routes
 	router.HandleFunc("/set", apphandlers.SetSessionHandler).Methods("GET")
