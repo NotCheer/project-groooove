@@ -1,11 +1,15 @@
-{
-    admin localhost:2020
-}
-
-groooove.me {
-    reverse_proxy localhost:3000
-}
-
-api.groooove.me {
-    reverse_proxy localhost:8080
+:3001 {
+	log {
+		output stdout
+		format console
+	}
+	handle_path /api/* {
+		reverse_proxy http://groooove.me:8080 {
+			header_up Host groooove.me
+			header_up Referer "http://groooove.me"
+		}
+	}
+	handle {
+		reverse_proxy http://localhost:3000
+	}
 }

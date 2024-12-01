@@ -1,0 +1,11 @@
+{
+    admin localhost:2020
+}
+
+groooove.me {
+    reverse_proxy localhost:3000
+}
+
+api.groooove.me {
+    reverse_proxy localhost:8080
+}
