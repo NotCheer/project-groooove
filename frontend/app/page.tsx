@@ -9,7 +9,7 @@ export default function Home() {
   const mockLoopInfo1: LoopInfoJson = {
     id: 123,
     title: "A loop",
-    author: "Some one",
+    author: { id: 1, username: "Some one" },
     bpm: 114,
     loop: [
       { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },
@@ -27,7 +27,7 @@ export default function Home() {
   const mockLoopInfo2: LoopInfoJson = {
     id: 345,
     title: "Another loop",
-    author: "Some one else",
+    author: { id: 2, username: "Some one else" },
     bpm: 96,
     loop: [
       { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },
@@ -48,7 +48,7 @@ export default function Home() {
   const mockLoopInfo3: LoopInfoJson = {
     id: 456,
     title: "Another loop3",
-    author: "Some one else3",
+    author: { id: 3, username: "Some one else3" },
     bpm: 120,
     loop: [
       { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },
@@ -69,7 +69,7 @@ export default function Home() {
   const mockLoopInfo4: LoopInfoJson = {
     id: 678,
     title: "Another loop4",
-    author: "Some one else4",
+    author: { id: 4, username: "Some one else4" },
     bpm: 140,
     loop: [
       { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },
@@ -90,7 +90,7 @@ export default function Home() {
   const mockLoopInfo5: LoopInfoJson = {
     id: 789,
     title: "super super super super super super super super long title",
-    author: "super super super super super long name",
+    author: { id: 5, username: "super super super super super long name" },
     bpm: 55,
     loop: [
       {
@@ -118,8 +118,10 @@ export default function Home() {
     mockLoopInfo4,
     mockLoopInfo5,
   ];
-
+  // const { data, error, isLoading } = useSWR("/api/user/123", );
   const [page, setPage] = useState(1);
+
+  console.log(mockLoopInfo5.loop);
 
   return (
     <>

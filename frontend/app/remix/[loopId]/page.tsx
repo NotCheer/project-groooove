@@ -18,7 +18,7 @@ type Prop = {
   };
 };
 
-export default function Create({ params: { loopId } }: Prop) {
+export default function RemixLoopId({ params: { loopId } }: Prop) {
   console.log("editing loop with ID = " + loopId);
   const initialLoop: LoopJson = [
     { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },

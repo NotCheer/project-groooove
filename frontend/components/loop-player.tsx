@@ -42,9 +42,15 @@ export const LoopPlayer = ({
         <CardBody className="gap-4 flex justify-center">
           <div className="flex flex-row justify-between items-center gap-4">
             <PlayButton playing={playing} setPlaying={setPlaying} />
-            <p className="text-lg">
-              <b>{loopInfo.title}</b> by <b>{loopInfo.author}</b>
-            </p>
+            <div>
+              <p className="font-bold text-lg/none pt-1">{loopInfo.title}</p>
+              <p className="text-sm leading-inherit">
+                by{" "}
+                <Link className="font-semibold text-sm/none">
+                  {loopInfo.author.username}
+                </Link>
+              </p>
+            </div>
             <p> {loopInfo.bpm} BPM</p>
             <div className="basis-0 flex-grow" />
             <Tooltip closeDelay={50} content="Rate this loop">

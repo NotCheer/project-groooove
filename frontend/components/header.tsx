@@ -32,7 +32,7 @@ export const Header = () => {
           <p
             className={cn(
               shrikhand.className,
-              "text-2xl bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-yellow-400 px-1",
+              "text-2xl bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-yellow-400 px-1 select-none",
             )}
           >
             Grooove
