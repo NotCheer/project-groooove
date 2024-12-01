@@ -1,8 +1,11 @@
-:3001 {
-	handle /api/* {
-		reverse_proxy http://groooove.me:8080
-	}
-	handle {
-		reverse_proxy http://localhost:3000
-	}
+{
+    admin localhost:2020
+}
+
+groooove.me {
+    reverse_proxy localhost:3000
+}
+
+api.groooove.me {
+    reverse_proxy localhost:8080
 }
