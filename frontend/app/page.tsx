@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
+
 import { LoopInfoJson } from "@/types";
-import { LoopList } from "@/components/loop-list";
+import { PagedLoopList } from "@/components/paged-loop-list";
 
 export default function Home() {
   const mockLoopInfo1: LoopInfoJson = {
@@ -117,9 +119,16 @@ export default function Home() {
     mockLoopInfo5,
   ];
 
+  const [page, setPage] = useState(1);
+
   return (
     <>
-      <LoopList loops={mockLoops} />
+      <PagedLoopList
+        loops={mockLoops}
+        page={page}
+        setPage={setPage}
+        totalPages={10}
+      />
     </>
   );
 }
