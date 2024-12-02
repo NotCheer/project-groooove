@@ -29,13 +29,18 @@ export interface ApiResponse {
   message: string;
 }
 
+export interface LoginResponse {
+  user_id: number;
+  message: string;
+}
+
 export const emailLogin = async (
   credentials: LoginRequest,
 ): Promise<ApiResponse> => {
   try {
-    const response = await apiClient.post<ApiResponse>("/login", credentials);
+    const res = await apiClient.post<LoginResponse>("/login", credentials);
 
-    return response.data;
+    return res.data;
   } catch (error: any) {
     throw error.response?.data || { message: "Login failed" };
   }
