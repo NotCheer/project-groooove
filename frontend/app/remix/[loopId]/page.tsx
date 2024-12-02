@@ -8,9 +8,11 @@ import {
   Divider,
   Input,
 } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
 
 import { LoopEditor } from "@/components/loop-editor";
 import { LoopJson } from "@/types";
+import { useUserId } from "@/hooks/useUserId";
 
 type Prop = {
   params: {
@@ -19,6 +21,12 @@ type Prop = {
 };
 
 export default function RemixLoopId({ params: { loopId } }: Prop) {
+  const userId = useUserId();
+  const router = useRouter();
+
+  if (userId == null) {
+    router.push("/login");
+  }
   console.log("editing loop with ID = " + loopId);
   const initialLoop: LoopJson = [
     { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },

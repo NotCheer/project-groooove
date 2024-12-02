@@ -8,13 +8,24 @@ import {
   Link,
   Button,
   cn,
+  Avatar,
 } from "@nextui-org/react";
 import { usePathname } from "next/navigation";
 import NextLink from "next/link";
+import useSWR from "swr";
 
 import { shrikhand } from "@/config/fonts";
+import { useUserId } from "@/hooks/useUserId";
+import { getUserById } from "@/util/api";
 
 export const Header = () => {
+  const userId = useUserId();
+
+  const { data } = useSWR(
+    () => (userId == null ? null : [userId, "getUserById"]),
+    ([id, _]) => getUserById(id),
+  );
+
   const pathname = usePathname();
 
   function getIsActive(path: string): boolean {
@@ -52,14 +63,27 @@ export const Header = () => {
         </NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end">
-        <NavbarItem className="hidden lg:flex">
-          <Link href="/login">Login</Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Button as={Link} color="primary" href="/signup" variant="flat">
-            Sign Up
-          </Button>
-        </NavbarItem>
+        {userId == null ? (
+          <>
+            <NavbarItem className="hidden lg:flex">
+              <Link href="/login">Login</Link>
+            </NavbarItem>
+            <NavbarItem>
+              <Button as={Link} color="primary" href="/signup" variant="flat">
+                Sign Up
+              </Button>
+            </NavbarItem>
+          </>
+        ) : (
+          <NavbarItem>
+            <Link href="/profile">
+              <div className="flex gap-2 items-center">
+                <p className="text-sm">{data ? data.username : ""}</p>
+                <Avatar showFallback />
+              </div>
+            </Link>
+          </NavbarItem>
+        )}
       </NavbarContent>
     </Navbar>
   );

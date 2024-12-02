@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Card, CardBody, Input } from "@nextui-org/react";
 
@@ -9,14 +7,14 @@ import { Sequencer } from "@/components/sequencer";
 import { LoopJson } from "@/types";
 
 interface Props {
-  initialLoop: LoopJson;
-  initialBpm: number;
+  loop: LoopJson;
+  setLoop: (loop: LoopJson) => void;
+  bpm: number;
+  setBpm: (bpm: number) => void;
 }
 
-export const LoopEditor = ({ initialLoop, initialBpm }: Props) => {
-  const [loop, setLoop] = useState(initialLoop);
-  const [bpm, setBpm] = useState(initialBpm);
-  const [inputBpm, setInputBpm] = useState(initialBpm);
+export const LoopEditor = ({ loop, setLoop, bpm, setBpm }: Props) => {
+  const [inputBpm, setInputBpm] = useState(bpm);
   const [bpmIsvalid, setBpmIsValid] = useState(bpm > 0);
   const [playing, setPlaying] = useState(false);
 
