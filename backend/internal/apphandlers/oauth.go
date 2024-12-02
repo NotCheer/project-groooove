@@ -73,6 +73,7 @@ func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
     sess, _ := session.GetSession(r)
     sess.Values["email"] = userInfo.Email
     sess.Values["name"] = userInfo.Name
+    sess.Values["userId"] = userID
     err = session.SaveSession(w, r, sess)
     if err != nil {
         http.Error(w, "Failed to save session", http.StatusInternalServerError)

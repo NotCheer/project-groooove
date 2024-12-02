@@ -43,6 +43,7 @@ func main() {
 	router.HandleFunc("/api/login", apphandlers.LoginHandler).Methods("POST")
 	router.HandleFunc("/api/oauth/google", apphandlers.GoogleOAuthHandler).Methods("POST")
 	router.HandleFunc("/api/signup", apphandlers.CreateUser).Methods("POST")
+	router.HandleFunc("/api/logout", apphandlers.LogoutHandler).Methods("GET")
 
 	// Health check route
 	router.HandleFunc("/api/health", apphandlers.HealthCheckHandler).Methods("GET")

@@ -46,6 +46,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
     sess, _ := session.GetSession(r)
     sess.Values["email"] = user.Email
+    sess.Values["userId"] = userID
 
     session.SaveSession(w, r, sess)
 
@@ -53,5 +54,22 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(map[string]interface{}{
         "message": "Logged in successfully",
         "user_id": userID,
+    })
+}
+
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    // Retrieve the current session
+    sess, _ := session.GetSession(r)
+
+    // Clear all session values
+    sess.Values = make(map[interface{}]interface{})
+
+    // Save the updated session
+    session.SaveSession(w, r, sess)
+
+    // Respond to the client
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "message": "Logged out successfully",
     })
 }
