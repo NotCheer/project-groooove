@@ -30,11 +30,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    result := db.DB.QueryRow("SELECT password FROM users WHERE email = $1", user.Email)
-    storedPassword := ""
-    err = result.Scan(&storedPassword)
+    var storedPassword string
+    var userID int
+    result := db.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", user.Email)
+    err = result.Scan(&userID, &storedPassword)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
         return
     }
 
@@ -45,8 +46,30 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
     sess, _ := session.GetSession(r)
     sess.Values["email"] = user.Email
+    sess.Values["userId"] = userID
 
     session.SaveSession(w, r, sess)
 
-    json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
+    // Respond with user ID
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "message": "Logged in successfully",
+        "user_id": userID,
+    })
+}
+
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+    // Retrieve the current session
+    sess, _ := session.GetSession(r)
+
+    // Clear all session values
+    sess.Values = make(map[interface{}]interface{})
+
+    // Save the updated session
+    session.SaveSession(w, r, sess)
+
+    // Respond to the client
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "message": "Logged out successfully",
+    })
 }

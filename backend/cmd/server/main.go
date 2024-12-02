@@ -25,7 +25,7 @@ func main() {
 
 	// User routes
 	authRouter.HandleFunc("/users", apphandlers.GetUsers).Methods("GET")
-	authRouter.HandleFunc("/users", apphandlers.CreateUser).Methods("POST")
+	router.HandleFunc("/users/{id}", apphandlers.GetUserNameByIDHandler).Methods("GET")
 
 	// Loop routes
 	authRouter.HandleFunc("/loops", apphandlers.CreateLoop).Methods("POST")
@@ -40,11 +40,13 @@ func main() {
 	router.HandleFunc("/check", apphandlers.CheckSessionHandler).Methods("GET")
 
 	// Auth routes
-	router.HandleFunc("/login", apphandlers.LoginHandler).Methods("POST")
-	router.HandleFunc("/oauth/google", apphandlers.GoogleOAuthHandler).Methods("POST")
+	router.HandleFunc("/api/login", apphandlers.LoginHandler).Methods("POST")
+	router.HandleFunc("/api/oauth/google", apphandlers.GoogleOAuthHandler).Methods("POST")
+	router.HandleFunc("/api/signup", apphandlers.CreateUser).Methods("POST")
+	router.HandleFunc("/api/logout", apphandlers.LogoutHandler).Methods("GET")
 
 	// Health check route
-	router.HandleFunc("/health", apphandlers.HealthCheckHandler).Methods("GET")
+	router.HandleFunc("/api/health", apphandlers.HealthCheckHandler).Methods("GET")
 
 	// Setup CORS
 	cors := handlers.CORS(

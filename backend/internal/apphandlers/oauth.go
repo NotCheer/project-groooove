@@ -55,14 +55,12 @@ func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Check if user exists in the database
-    result := db.DB.QueryRow("SELECT email FROM users WHERE email = $1", userInfo.Email)
-    storedEmail := ""
-    err = result.Scan(&storedEmail)
+    var userID int
+    result := db.DB.QueryRow("SELECT id FROM users WHERE email = $1", userInfo.Email)
+    err = result.Scan(&userID)
 
-    // If user does not exist, create a new user
     if err == sql.ErrNoRows {
-        _, err := db.DB.Exec("INSERT INTO users (email, username) VALUES ($1, $2)", userInfo.Email, userInfo.Name)
+        err = db.DB.QueryRow("INSERT INTO users (email, username) VALUES ($1, $2) RETURNING id", userInfo.Email, userInfo.Name).Scan(&userID)
         if err != nil {
             http.Error(w, "Failed to create new user", http.StatusInternalServerError)
             return
@@ -75,15 +73,18 @@ func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
     sess, _ := session.GetSession(r)
     sess.Values["email"] = userInfo.Email
     sess.Values["name"] = userInfo.Name
+    sess.Values["userId"] = userID
     err = session.SaveSession(w, r, sess)
     if err != nil {
         http.Error(w, "Failed to save session", http.StatusInternalServerError)
         return
     }
 
-    json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "message": "Logged in successfully",
+        "user_id": userID,
+    })
 }
-
 
 func getUserDataFromGoogle(code string) ([]byte, error) {
     token, err := googleOauthConfig.Exchange(context.Background(), code)

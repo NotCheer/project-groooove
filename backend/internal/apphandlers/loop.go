@@ -169,6 +169,21 @@ func GetLoops(w http.ResponseWriter, r *http.Request) {
     }
 
     const loopsPerPage = 5
+
+    // Get total number of loops
+    var totalLoops int
+    err = db.DB.QueryRow("SELECT COUNT(*) FROM loops").Scan(&totalLoops)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    totalPages := (totalLoops + loopsPerPage - 1) / loopsPerPage // Calculate total pages
+
+    if page > totalPages {
+        page = totalPages
+    }
+
     offset := (page - 1) * loopsPerPage
 
     rows, err := db.DB.Query(`
@@ -210,8 +225,15 @@ func GetLoops(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Prepare the response
+    response := models.PagedLoops{
+        Page:       page,
+        TotalPages: totalPages,
+        Loops:      loops,
+    }
+
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(loops)
+    json.NewEncoder(w).Encode(response)
 }
 
 func RateLoop(w http.ResponseWriter, r *http.Request) {
@@ -280,3 +302,4 @@ func RateLoop(w http.ResponseWriter, r *http.Request) {
 
     w.WriteHeader(http.StatusNoContent)
 }
+
