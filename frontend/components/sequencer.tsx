@@ -1,11 +1,4 @@
-import {
-  useRef,
-  useEffect,
-  useState,
-  SetStateAction,
-  Dispatch,
-  useContext,
-} from "react";
+import { useRef, useEffect, useState, useContext } from "react";
 import {
   Application,
   Assets,
@@ -23,7 +16,7 @@ import { LoopJson, TrackJson } from "@/types";
 
 interface Props {
   loop: LoopJson;
-  setLoop: Dispatch<SetStateAction<LoopJson>>;
+  setLoop: (loop: LoopJson) => void;
   playing: boolean;
   bpm: number;
 }
