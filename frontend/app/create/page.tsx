@@ -15,12 +15,16 @@ import { useState } from "react";
 import { LoopEditor } from "@/components/loop-editor";
 import { LoopJson } from "@/types";
 import { createLoop } from "@/util/api";
+import { LoginRequired } from "@/components/login-required";
+import { useUserId } from "@/hooks/useUserId";
 
 type Inputs = {
   title: string;
 };
 
 export default function Create() {
+  const userId = useUserId();
+
   const initialLoop: LoopJson = [
     { sample: "house_kick.wav", sequence: Array<boolean>(16).fill(false) },
     { sample: "house_snare.wav", sequence: Array<boolean>(16).fill(false) },
@@ -52,6 +56,10 @@ export default function Create() {
       console.error(err);
     }
   };
+
+  if (!userId) {
+    return <LoginRequired message="Please login or sign up to create loops" />;
+  }
 
   return (
     <>

@@ -23,20 +23,18 @@ export default function Home() {
     return <p>Failed to load: {error}</p>;
   }
 
-  if (isLoading) {
-    return <CircularProgress className="mx-auto" size="lg" />;
+  if (!data || isLoading) {
+    return <CircularProgress className="mx-auto p-6" size="lg" />;
   }
 
   return (
-    data && (
-      <>
-        <PagedLoopList
-          loops={data.loops}
-          page={page}
-          setPage={setPage}
-          totalPages={data.totalPages}
-        />
-      </>
-    )
+    <>
+      <PagedLoopList
+        loops={data.loops}
+        page={page}
+        setPage={setPage}
+        totalPages={data.totalPages}
+      />
+    </>
   );
 }

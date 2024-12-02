@@ -1,19 +1,13 @@
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+import { useCookies } from "react-cookie";
 
 export function useUserId() {
-  const [userId, setUserId] = useState<number | null>(null);
-
-  useEffect(() => {
-    const storedId = Cookies.get("userId");
-
-    if (!storedId) {
-      setUserId(null);
-
-      return;
-    }
-    setUserId(parseInt(storedId));
+  const [cookies] = useCookies(["userId"], {
+    doNotParse: true,
   });
 
-  return userId;
+  if (!cookies.userId) {
+    return null;
+  }
+
+  return parseInt(cookies.userId);
 }

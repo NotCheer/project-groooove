@@ -22,23 +22,22 @@ export default function LoopId({ params: { id } }: Prop) {
 
   const [playing, setPlaying] = useState(false);
 
-  if (isLoading) {
-    return <CircularProgress size="lg" />;
-  }
   if (error) {
     return <p>error: {error}</p>;
   }
 
+  if (!loop || isLoading) {
+    return <CircularProgress className="mx-auto p-6" size="lg" />;
+  }
+
   return (
-    loop && (
-      <>
-        <LoopPlayer
-          loopInfo={loop}
-          playing={playing}
-          startPlaying={() => setPlaying(true)}
-          stopPlaying={() => setPlaying(false)}
-        />
-      </>
-    )
+    <>
+      <LoopPlayer
+        loopInfo={loop}
+        playing={playing}
+        startPlaying={() => setPlaying(true)}
+        stopPlaying={() => setPlaying(false)}
+      />
+    </>
   );
 }

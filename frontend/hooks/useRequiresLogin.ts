@@ -1,11 +1,15 @@
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { useLayoutEffect } from "react";
+import Cookies from "js-cookie";
 
 export function useRequiresLogin() {
   const router = useRouter();
-  const storedId = Cookies.get("userId");
 
-  if (!storedId) {
-    router.push("/login");
-  }
+  useLayoutEffect(() => {
+    const storedId = Cookies.get("userId");
+
+    if (!storedId) {
+      router.push("/login");
+    }
+  }, []);
 }

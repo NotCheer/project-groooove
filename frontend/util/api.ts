@@ -140,3 +140,24 @@ export const createLoop = async (loopData: CreateLoopRequest) => {
     throw `Unexpected error: ${err}`;
   }
 };
+
+export interface UpdateLoopRequest extends CreateLoopRequest {}
+
+export const updateLoopById = async (
+  id: number,
+  loopData: UpdateLoopRequest,
+) => {
+  try {
+    const { data } = await apiClient.put<LoopInfoJson>(
+      `/loops/${id}`,
+      loopData,
+    );
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
