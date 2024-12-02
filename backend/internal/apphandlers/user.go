@@ -1,10 +1,13 @@
 package apphandlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
+	"github.com/gorilla/mux"
 	"github.com/UTSCC09/project-groooove/backend/internal/db"
 	"github.com/UTSCC09/project-groooove/backend/internal/models"
 )
@@ -49,4 +52,31 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	newUser.Password = ""
 	json.NewEncoder(w).Encode(newUser)
+}
+
+func GetUserNameByIDHandler(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    userIDStr, ok := vars["id"]
+    if !ok {
+        http.Error(w, "User ID is required", http.StatusBadRequest)
+        return
+    }
+
+    userID, err := strconv.Atoi(userIDStr)
+    if err != nil || userID <= 0 {
+        http.Error(w, "Invalid user ID", http.StatusBadRequest)
+        return
+    }
+
+    var userName string
+    err = db.DB.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&userName)
+    if err == sql.ErrNoRows {
+        http.Error(w, "User not found", http.StatusNotFound)
+        return
+    } else if err != nil {
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+
+    json.NewEncoder(w).Encode(map[string]string{"username": userName})
 }

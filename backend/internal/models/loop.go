@@ -18,6 +18,12 @@ type LoopInfoJson struct {
     RatingCount int       `json:"ratingCount"`
 }
 
+type PagedLoops struct {
+    Page       int            `json:"page"`
+    TotalPages int            `json:"totalPages"`
+    Loops      []LoopInfoJson `json:"loops"`
+}
+
 type RateLoopRequest struct {
     Rating int `json:"rating"`
 }
