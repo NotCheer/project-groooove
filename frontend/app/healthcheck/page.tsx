@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 import { healthCheck } from "@/util/api";
 
-export default function Login() {
+export default function HealthCheck() {
   const [health, setHealth] = useState<string>("");
 
   useEffect(() => {

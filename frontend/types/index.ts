@@ -4,12 +4,18 @@ export type LoopJson = TrackJson[];
 export interface LoopInfoJson {
   id: number;
   title: string;
-  author: string;
+  author: BasicUser;
   loop: LoopJson;
   bpm: number;
   createdAt: Date;
   rating: number;
   ratingCount: number;
+}
+
+export interface PagedLoops {
+  page: number;
+  totalPages: number;
+  loops: LoopInfoJson[];
 }
 
 export interface BasicUser {

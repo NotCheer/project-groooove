@@ -2,7 +2,7 @@
 
 import { Button, Input } from "@nextui-org/react";
 
-export default function Login() {
+export default function EmailSignup() {
   return (
     <>
       <Input isRequired label="Username" type="text" />
