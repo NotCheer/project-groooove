@@ -25,7 +25,7 @@ func main() {
 
 	// User routes
 	authRouter.HandleFunc("/users", apphandlers.GetUsers).Methods("GET")
-	router.HandleFunc("/users/{id}", apphandlers.GetUserNameByIDHandler).Methods("GET")
+	router.HandleFunc("/api/users/{id}", apphandlers.GetUserNameByIDHandler).Methods("GET")
 
 	// Loop routes
 	authRouter.HandleFunc("/loops", apphandlers.CreateLoop).Methods("POST")
