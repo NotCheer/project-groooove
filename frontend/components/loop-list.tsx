@@ -12,7 +12,7 @@ export const LoopList = ({ loops }: Props) => {
   const [playingId, setPlayingId] = useState<number | null>(null);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full max-w-2xl">
       {loops.map((loop) => (
         <LoopPlayer
           key={loop.id}

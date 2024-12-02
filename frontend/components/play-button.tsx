@@ -14,7 +14,6 @@ export const PlayButton = ({ playing, setPlaying }: Props) => {
 
   return (
     <Button
-      className="min-w-24"
       startContent={
         playing ? (
           <BsStopFill className={ICON_STYLE} size={20} />
@@ -24,7 +23,7 @@ export const PlayButton = ({ playing, setPlaying }: Props) => {
       }
       onClick={togglePlaying}
     >
-      {playing ? "STOP" : "PLAY"}
+      <p className="min-w-10">{playing ? "STOP" : "PLAY"}</p>
     </Button>
   );
 };

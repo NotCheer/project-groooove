@@ -1,10 +1,9 @@
 import axios, { isAxiosError } from "axios";
 import { CodeResponse } from "@react-oauth/google";
 
-import { LoopInfoJson } from "@/types";
+import { LoopInfoJson, PagedLoops } from "@/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "http://groooove.me:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -52,9 +51,7 @@ export const signup = async (userData: SignupRequest): Promise<ApiResponse> => {
   }
 };
 
-export const verify = async (
-  credentials: CodeResponse,
-): Promise<ApiResponse> => {
+export const verify = async (credentials: CodeResponse) => {
   try {
     const response = await apiClient.post<ApiResponse>(
       "/oauth/google",
@@ -63,11 +60,11 @@ export const verify = async (
 
     return response.data;
   } catch (error: any) {
-    throw error.response?.data || { message: "thrid party login failed" };
+    throw error.response?.data || { message: "third party login failed" };
   }
 };
 
-export const healthCheck = async (): Promise<ApiResponse> => {
+export const healthCheck = async () => {
   try {
     const response = await apiClient.get<ApiResponse>("/health");
 
@@ -77,7 +74,7 @@ export const healthCheck = async (): Promise<ApiResponse> => {
   }
 };
 
-export const getLoop = async (id: number) => {
+export const getLoopById = async (id: number) => {
   try {
     const { data } = await apiClient.get<LoopInfoJson>(`/loops/${id}`);
 
@@ -85,8 +82,20 @@ export const getLoop = async (id: number) => {
   } catch (err) {
     if (isAxiosError(err)) {
       throw err.message;
-    } else {
-      throw `Unexpected error: message`;
     }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export const getLoops = async (page: number) => {
+  try {
+    const { data } = await apiClient.get<PagedLoops>(`/loops?page=${page}`);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
   }
 };

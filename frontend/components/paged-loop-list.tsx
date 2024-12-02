@@ -13,7 +13,7 @@ type Props = {
 
 export const PagedLoopList = ({ loops, page, setPage, totalPages }: Props) => {
   return (
-    <div className="flex flex-col items-center gap-4 max-w-3xl mx-auto">
+    <div className="flex flex-col items-center gap-4 max-w-2xl mx-auto">
       <LoopList loops={loops} />
       <Pagination
         className="py-8"

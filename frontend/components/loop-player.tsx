@@ -51,7 +51,7 @@ export const LoopPlayer = ({
                 </Link>
               </p>
             </div>
-            <p> {loopInfo.bpm} BPM</p>
+            <p className="min-w-16"> {loopInfo.bpm} BPM</p>
             <div className="basis-0 flex-grow" />
             <Tooltip closeDelay={50} content="Rate this loop">
               <Button onPress={rateModalState.onOpen}>Rate</Button>

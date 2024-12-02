@@ -4,7 +4,7 @@ import { CircularProgress } from "@nextui-org/react";
 import useSWR from "swr";
 import { useState } from "react";
 
-import { getLoop } from "@/util/api";
+import { getLoopById } from "@/util/api";
 import { LoopPlayer } from "@/components/loop-player";
 
 type Prop = {
@@ -18,7 +18,7 @@ export default function LoopId({ params: { id } }: Prop) {
     data: loop,
     error,
     isLoading,
-  } = useSWR([id, "getLoop"], ([id, _]) => getLoop(id));
+  } = useSWR([id, "getLoopById"], ([id, _]) => getLoopById(id));
 
   const [playing, setPlaying] = useState(false);
 

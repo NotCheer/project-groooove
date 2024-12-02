@@ -12,6 +12,12 @@ export interface LoopInfoJson {
   ratingCount: number;
 }
 
+export interface PagedLoops {
+  page: number;
+  totalPages: number;
+  loops: LoopInfoJson[];
+}
+
 export interface BasicUser {
   username: string;
   id: number;
