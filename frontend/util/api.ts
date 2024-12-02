@@ -19,10 +19,11 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface SignupRequest {
+export interface SignUpRequest {
   username: string;
   email: string;
   password: string;
+  confirmPassword?: string;
 }
 
 export interface ApiResponse {
@@ -41,9 +42,9 @@ export const emailLogin = async (
   }
 };
 
-export const signup = async (userData: SignupRequest): Promise<ApiResponse> => {
+export const emailSignUp = async (userData: SignUpRequest): Promise<ApiResponse> => {
   try {
-    const response = await apiClient.post<ApiResponse>("/api/users", userData);
+    const response = await apiClient.post<ApiResponse>("/signup", userData);
 
     return response.data;
   } catch (error: any) {
@@ -99,3 +100,4 @@ export const getLoops = async (page: number) => {
     throw `Unexpected error: ${err}`;
   }
 };
+
