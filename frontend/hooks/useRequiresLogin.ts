@@ -1,12 +1,11 @@
+import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
-import { useUserId } from "./useUserId";
-
 export function useRequiresLogin() {
-  const userId = useUserId();
   const router = useRouter();
+  const storedId = Cookies.get("userId");
 
-  if (userId == null) {
+  if (!storedId) {
     router.push("/login");
   }
 }
