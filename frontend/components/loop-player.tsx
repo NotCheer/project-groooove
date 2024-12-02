@@ -12,6 +12,7 @@ import { PlayButton } from "./play-button";
 
 import { Sequencer } from "@/components/sequencer";
 import { LoopInfoJson } from "@/types";
+import { useUserId } from "@/hooks/useUserId";
 
 interface Props {
   loopInfo: LoopInfoJson;
@@ -26,6 +27,8 @@ export const LoopPlayer = ({
   startPlaying,
   stopPlaying,
 }: Props) => {
+  const userId = useUserId();
+
   function setPlaying(playing: boolean) {
     if (playing) {
       startPlaying();
@@ -53,18 +56,29 @@ export const LoopPlayer = ({
             </div>
             <p className="min-w-16"> {loopInfo.bpm} BPM</p>
             <div className="basis-0 flex-grow" />
-            <Tooltip closeDelay={50} content="Rate this loop">
-              <Button onPress={rateModalState.onOpen}>Rate</Button>
-            </Tooltip>
-            <RateModal
-              isOpen={rateModalState.isOpen}
-              onOpenChange={rateModalState.onOpenChange}
-            />
-            <Tooltip closeDelay={50} content="Create a remix!">
-              <Button as={Link} href={`/remix/${loopInfo.id}`}>
-                Remix
-              </Button>
-            </Tooltip>
+            {userId != null ? (
+              <>
+                <Tooltip closeDelay={50} content="Rate this loop">
+                  <Button onPress={rateModalState.onOpen}>Rate</Button>
+                </Tooltip>
+                <RateModal
+                  isOpen={rateModalState.isOpen}
+                  onOpenChange={rateModalState.onOpenChange}
+                />
+                <Tooltip closeDelay={50} content="Create a remix!">
+                  <Button as={Link} href={`/remix/${loopInfo.id}`}>
+                    Remix
+                  </Button>
+                </Tooltip>
+              </>
+            ) : (
+              <div className="flex flex-col items-end mx-2">
+                <Link href="/login">
+                  <p className="font-bold">Login</p>
+                </Link>
+                <p className="text-sm leading-none">to rate/remix</p>
+              </div>
+            )}
           </div>
           <Sequencer
             bpm={loopInfo.bpm}

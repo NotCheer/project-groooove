@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import { CircularProgress } from "@nextui-org/react";
+import { CircularProgress, Pagination } from "@nextui-org/react";
 
 import { PagedLoopList } from "@/components/paged-loop-list";
 import { getLoops } from "@/util/api";
@@ -28,13 +28,17 @@ export default function Home() {
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-4 max-w-2xl w-full mx-auto">
+      <div className="flex items-center gap-4 w-full max-w-2xl">
+        <p className="font-bold text-xl">Page:</p>
+        <Pagination page={page} total={data.totalPages} onChange={setPage} />
+      </div>
       <PagedLoopList
         loops={data.loops}
         page={page}
         setPage={setPage}
         totalPages={data.totalPages}
       />
-    </>
+    </div>
   );
 }
