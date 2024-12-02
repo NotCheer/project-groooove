@@ -1,7 +1,8 @@
 import axios, { isAxiosError } from "axios";
 import { CodeResponse } from "@react-oauth/google";
+import Cookies from "js-cookie";
 
-import { LoopInfoJson, PagedLoops } from "@/types";
+import { BasicUser, LoopInfoJson, LoopJson, PagedLoops } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "/api";
 
@@ -30,13 +31,21 @@ export interface ApiResponse {
   message: string;
 }
 
+export interface LoginResponse {
+  user_id: number;
+  message: string;
+}
+
 export const emailLogin = async (
   credentials: LoginRequest,
 ): Promise<ApiResponse> => {
   try {
-    const response = await apiClient.post<ApiResponse>("/login", credentials);
+    const res = await apiClient.post<LoginResponse>("/login", credentials);
 
-    return response.data;
+    // TODO: remove me when backend is done!
+    Cookies.set("userId", res.data.user_id.toString());
+
+    return res.data;
   } catch (error: any) {
     throw error.response?.data || { message: "Login failed" };
   }
@@ -101,3 +110,34 @@ export const getLoops = async (page: number) => {
   }
 };
 
+export const getUserById = async (id: number) => {
+  try {
+    const { data } = await apiClient.get<BasicUser>(`/users/${id}`);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export interface CreateLoopRequest {
+  loop: LoopJson;
+  bpm: number;
+  title: string;
+}
+
+export const createLoop = async (loopData: CreateLoopRequest) => {
+  try {
+    const { data } = await apiClient.post<LoopInfoJson>(`/loops`, loopData);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
