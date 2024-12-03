@@ -11,12 +11,18 @@ import (
    	"strconv"
    	"os"
    	"fmt"
+   	"context"
+   	"io/ioutil"
+   	"golang.org/x/oauth2"
+    "golang.org/x/oauth2/google"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	_ "github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
+	_ "github.com/golang-jwt/jwt"
 )
 
 type User struct {
@@ -41,38 +47,131 @@ type UserCredentials struct {
 var db *sql.DB
 var Store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
+var googleOauthConfig = &oauth2.Config{
+	RedirectURL:  "postmessage",
+	ClientID:     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
+	ClientSecret: os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
+	Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+	Endpoint:     google.Endpoint,
+}
+
+const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
+
+// ------------ health check ----------------
+
+func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+    session, err := Store.Get(r, "session-name")
+    if err != nil {
+        http.Error(w, "Failed to get session", http.StatusInternalServerError)
+        return
+    }
+
+    email, ok := session.Values["email"].(string)
+    if !ok || email == "" {
+        http.Error(w, "No user logged in", http.StatusUnauthorized)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(map[string]string{"status": "ok", "email": email})
+}
+
+
 // ------------ auths ---------------
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var user UserCredentials
+        var user UserCredentials
 
-	err := json.NewDecoder(r.Body).Decode(&user)
+        err := json.NewDecoder(r.Body).Decode(&user)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+
+        // Retrieve the user from the database
+        result := db.QueryRow("SELECT password FROM users WHERE username = $1", user.Username)
+        storedPassword := ""
+        err = result.Scan(&storedPassword)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        // Compare the stored hashed password, with the hashed version of the password that was received
+        if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password)); err != nil {
+            http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
+            return
+        }
+
+        session, _ := Store.Get(r, "session-name")
+        session.Values["username"] = user.Username
+
+        session.Save(r, w)
+
+        json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
+}
+
+// OAuth
+
+func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
+    var requestData struct {
+        Code string `json:"Code"`
+    }
+
+    // Decode the request body to get the authorization code
+    err := json.NewDecoder(r.Body).Decode(&requestData)
+    if err != nil || requestData.Code == "" {
+        http.Error(w, "Invalid request", http.StatusBadRequest)
+        return
+    }
+
+    // Use the code to get user data from Google
+    userData, err := getUserDataFromGoogle(requestData.Code)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    var userInfo struct {
+        Email string `json:"email"`
+        Name  string `json:"name"`
+    }
+    if err := json.Unmarshal(userData, &userInfo); err != nil {
+        http.Error(w, "Failed to parse user data", http.StatusInternalServerError)
+        return
+    }
+
+    // Set session with user information
+    session, _ := Store.Get(r, "session-name")
+    session.Values["email"] = userInfo.Email
+    session.Values["name"] = userInfo.Name
+    err = session.Save(r, w)
+    if err != nil {
+        http.Error(w, "Failed to save session", http.StatusInternalServerError)
+        return
+    }
+
+    json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
+}
+
+func getUserDataFromGoogle(code string) ([]byte, error) {
+	// Use code to get token and get user info from Google.
+
+	token, err := googleOauthConfig.Exchange(context.Background(), code)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
 	}
-
-	// Retrieve the user from the database
-	result := db.QueryRow("SELECT password FROM users WHERE username = $1", user.Username)
-	storedPassword := ""
-	err = result.Scan(&storedPassword)
+	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
 	}
-
-	// Compare the stored hashed password, with the hashed version of the password that was received
-	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password)); err != nil {
-		http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
-		return
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
-
-	session, _ := Store.Get(r, "session-name")
-	session.Values["username"] = user.Username
-
-	session.Save(r, w)
-
-	json.NewEncoder(w).Encode(map[string]string{"message": "Logged in successfully"})
+	return contents, nil
 }
 
 // test
@@ -159,12 +258,12 @@ func (lrw *LoggingResponseWriter) WriteHeader(code int) {
 
 func init() {
     Store.Options = &sessions.Options{
-        Domain:   "34.130.164.179",
+        Domain:   "groooove.me",
         Path:     "/",
         MaxAge:   3600 * 8, // 8 hours
         HttpOnly: true,
         Secure:   false,
-        SameSite: http.SameSiteNoneMode,
+        SameSite: http.SameSiteLaxMode,
     }
 }
 
@@ -186,7 +285,6 @@ func main() {
 
     // User routes
     authRouter.HandleFunc("/users", getUsers).Methods("GET")
-    authRouter.HandleFunc("/users", createUser).Methods("POST")
 
     // Loop routes
     authRouter.HandleFunc("/loops", createLoop).Methods("POST")
@@ -200,8 +298,26 @@ func main() {
 
     // Auth routes
     router.HandleFunc("/login", LoginHandler).Methods("POST")
+    router.HandleFunc("/users", createUser).Methods("POST")
 
-    log.Fatal(http.ListenAndServe(":8080", router))
+    //OAuth
+    router.HandleFunc("/oauth/google", GoogleOAuthHandler).Methods("POST")
+
+    // Health check route
+    router.HandleFunc("/health", HealthCheckHandler).Methods("GET")
+
+    // Setup CORS
+    	cors := handlers.CORS(
+    		handlers.AllowedOrigins([]string{"http://34.130.164.179:3000", "http://groooove.me:3000", "https://groooove.me", "http://groooove.me"}),
+    		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+    		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+    		handlers.AllowCredentials(),
+    	)
+
+    log.Printf("session_key: %s\n gClientID: %s\n, gClientSecret: %s\n", os.Getenv("SESSION_KEY"),
+     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"), os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"))
+
+    log.Fatal(http.ListenAndServe(":8080", cors(router)))
 
 }
 

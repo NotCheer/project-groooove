@@ -1,64 +1,96 @@
-"use client";
-
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useContext } from "react";
 import {
   Application,
   Assets,
   Container,
+  Graphics,
   Renderer,
   Sprite,
   Texture,
 } from "pixi.js";
-import { Button } from "@nextui-org/button";
+import { initDevtools } from "@pixi/devtools";
 import * as Tone from "tone";
 
-type TrackJson = { sample: string; sequence: boolean[] };
-export type LoopJson = TrackJson[];
+import { ToneContext } from "@/context/tone-context";
+import { LoopJson, TrackJson } from "@/types";
 
 interface Props {
-  initialLoop: LoopJson;
+  loop: LoopJson;
+  setLoop: (loop: LoopJson) => void;
+  playing: boolean;
+  bpm: number;
 }
 
 interface DrumSet {
   [key: string]: Tone.Player;
 }
 
-const drumSet: DrumSet = {};
+const sampleToName: { [key: string]: string } = {
+  "house_kick.wav": "Kick",
+  "house_snare.wav": "Snare",
+  "closed_hh.wav": "Closed Hi-hat",
+  "open_hh.wav": "Open Hi-hat",
+};
 
-let triggers: Tone.Loop[] = [];
-
-setInterval(() => {
-  console.log("#triggers: " + triggers.length);
-}, 3000);
-
-export const Sequencer = ({ initialLoop }: Props) => {
-  // const WIDTH = 600;
-  // const HEIGHT = 400;
+/**
+ * The sequencer in a pixi.js canvas
+ */
+export const Sequencer = ({ loop, setLoop, playing, bpm }: Props) => {
   const pixiContainer = useRef<HTMLDivElement>(null!);
   const appRef = useRef<Application<Renderer>>(null!);
-  const [playing, setPlaying] = useState(false);
-  const [loop, setLoop] = useState(initialLoop);
+  const playheadContainerRef = useRef<Container>(null!);
+  const drumloopContainerRef = useRef<Container>(null!);
+  const drumSet = useRef({} as DrumSet);
+  const triggers = useRef([] as Tone.Loop[]);
+
+  const playheadLoopRef = useRef<Tone.Loop>(null!);
 
   const [pixiInitialized, setPixiInitialized] = useState(false);
   const [textureLoaded, setTextureLoaded] = useState(false);
+  const [playheadPosition, setPlayheadPosition] = useState(0);
+  const toneOutput = useContext(ToneContext);
+
+  useEffect(() => {
+    if (!playheadLoopRef.current) {
+      playheadLoopRef.current = new Tone.Loop((_time) => {
+        setPlayheadPosition((pos) => (pos + 1) % 16);
+      }, "16n").start(Tone.Time("16n").toSeconds());
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
       if (!appRef.current) {
         appRef.current = new Application();
         await appRef.current.init({
-          background: "#FFFFFF",
-          // resizeTo: pixiContainer.current,
+          backgroundAlpha: 0,
+          resizeTo: pixiContainer.current,
         });
+        initDevtools({ app: appRef.current });
+
+        playheadContainerRef.current = new Container();
+        drumloopContainerRef.current = new Container();
+        appRef.current.stage.addChild(playheadContainerRef.current);
+        appRef.current.stage.addChild(drumloopContainerRef.current);
 
         // Attach the canvas to the container
         if (pixiContainer.current) {
           pixiContainer.current.appendChild(appRef.current.canvas);
         }
+        setPixiInitialized(true);
       }
     })();
-    setPixiInitialized(true);
   }, []);
+
+  function fixAspectRatio() {
+    if (pixiContainer.current) {
+      const width = pixiContainer.current.offsetWidth;
+
+      pixiContainer.current.style.height = `${(width / (16 * 160)) * (4 * 240)}px`;
+    }
+  }
+  //Fix aspect ratio of the canvas container
+  useEffect(fixAspectRatio);
 
   useEffect(() => {
     (async () => {
@@ -74,31 +106,52 @@ export const Sequencer = ({ initialLoop }: Props) => {
     })();
   }, []);
 
+  //update playhead
+  useEffect(() => {
+    if (!pixiInitialized) {
+      return;
+    }
+    if (!playing) {
+      playheadContainerRef.current.removeChildren();
+
+      return;
+    }
+    const app = appRef.current;
+    const playhead = new Graphics()
+      .rect(
+        (app.screen.width / 16) * playheadPosition,
+        0,
+        app.screen.width / 16,
+        app.screen.height,
+      )
+      .fill({ color: "f7a278", alpha: 0.6 });
+
+    playheadContainerRef.current.removeChildren();
+    playheadContainerRef.current.addChild(playhead);
+  }, [pixiInitialized, playing, playheadPosition]);
+
+  const stopAllTriggers = () => {
+    for (const trigger of triggers.current) {
+      trigger.stop();
+      trigger.dispose();
+    }
+  };
+
   useEffect(() => {
     if (!pixiInitialized || !textureLoaded) {
       return;
     }
+    const app = appRef.current;
     const drumloop = new Drumloop(loop);
 
-    appRef.current.stage.removeChildren();
-    appRef.current.stage.addChild(drumloop.container);
-
-    for (const trigger of triggers) {
-      trigger.stop();
-    }
-    const newTriggers: Tone.Loop[] = [];
+    drumloopContainerRef.current.removeChildren();
+    drumloopContainerRef.current.addChild(drumloop.container);
+    drumloop.container.height = app.screen.height;
+    drumloop.container.width = app.screen.width;
 
     drumloop.tracks.forEach((track) => {
       track.steps.forEach((step) => {
-        if (step.on) {
-          console.log("added a trigger");
-          const trigger = new Tone.Loop((time) => {
-            drumSet[track.sample].start(time);
-          }, "1m").start(Tone.Time("16n").toSeconds() * step.stepNo);
-
-          newTriggers.push(trigger);
-        }
-        step.sprite.on("click", () => {
+        step.sprite.on("pointertap", () => {
           const newLoop = structuredClone(loop);
 
           newLoop[track.trackNo].sequence[step.stepNo] = !step.on;
@@ -106,42 +159,80 @@ export const Sequencer = ({ initialLoop }: Props) => {
         });
       });
     });
-
-    triggers = newTriggers;
   }, [pixiInitialized, textureLoaded, loop]);
 
   useEffect(() => {
+    if (playing) {
+      const newTriggers: Tone.Loop[] = [];
+
+      loop.forEach((track) => {
+        track.sequence.forEach((step, stepNo) => {
+          if (step) {
+            const trigger = new Tone.Loop((time) => {
+              drumSet.current[track.sample].start(time);
+            }, "1m").start(Tone.Time("16n").toSeconds() * stepNo);
+
+            newTriggers.push(trigger);
+          }
+        });
+      });
+      stopAllTriggers();
+      triggers.current = newTriggers;
+    }
+  }, [loop, playing]);
+
+  useEffect(() => {
     for (const track of loop) {
-      if (!(track.sample in drumSet)) {
-        drumSet[track.sample] = new Tone.Player(
+      if (!(track.sample in drumSet.current)) {
+        drumSet.current[track.sample] = new Tone.Player(
           `/audio/${track.sample}`,
-        ).toDestination();
+        ).connect(toneOutput);
       }
     }
   }, [loop]);
 
   useEffect(() => {
-    console.log(Tone.getTransport().state);
-    if (playing && Tone.getTransport().state !== "started") {
+    if (playing) {
+      Tone.getTransport().bpm.value = bpm;
+    }
+  }, [bpm, playing]);
+
+  useEffect(() => {
+    if (playing) {
       Tone.loaded().then(() => {
-        Tone.getTransport().bpm.value = 128;
+        Tone.getTransport().stop();
+        setPlayheadPosition(0);
         Tone.getTransport().start();
       });
     } else if (!playing && Tone.getTransport().state == "started") {
-      Tone.getTransport().cancel(Tone.now());
-      Tone.getTransport().stop();
+      stopAllTriggers();
     }
   }, [playing]);
 
-  function togglePlaying() {
-    setPlaying(!playing);
-  }
+  // Clean up after unmounting
+  useEffect(() => {
+    return () => {
+      for (const track of loop) {
+        drumSet.current[track.sample].stop();
+      }
+      stopAllTriggers();
+    };
+  }, []);
 
   return (
-    <>
-      <Button onClick={togglePlaying}>{playing ? "STOP" : "PLAY"}</Button>
-      <div ref={pixiContainer} />
-    </>
+    <div className="flex flex-row flex-grow-0">
+      <div className="flex flex-col justify-around mr-2 flex-grow-0 min-w-32">
+        {loop.map((track) => (
+          <div
+            key={track.sample}
+            className="text-center basis-0 flex-grow flex flex-col justify-center flex-nowrap"
+          >
+            {sampleToName[track.sample]}
+          </div>
+        ))}
+      </div>
+      <div ref={pixiContainer} className="flex-grow flex-shrink" />
+    </div>
   );
 };
 

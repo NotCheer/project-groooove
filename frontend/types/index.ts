@@ -1,5 +1,29 @@
-import { SVGProps } from "react";
+export type TrackJson = { sample: string; sequence: boolean[] };
+export type LoopJson = TrackJson[];
 
-export type IconSvgProps = SVGProps<SVGSVGElement> & {
-  size?: number;
-};
+export interface LoopInfoJson {
+  id: number;
+  title: string;
+  author: BasicUser;
+  loop: LoopJson;
+  bpm: number;
+  createdAt: Date;
+  rating: number;
+  ratingCount: number;
+}
+
+export interface PagedLoops {
+  page: number;
+  totalPages: number;
+  loops: LoopInfoJson[];
+}
+
+export interface BasicUser {
+  username: string;
+  id: number;
+}
+
+export interface DetailedUser extends BasicUser {
+  avatar: string;
+  email: string;
+}
