@@ -57,7 +57,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
         Value:    strconv.Itoa(userID),
         Path:     "/",
         HttpOnly: false,
-        Secure:   false,
+        Secure:   true,
         Expires:  time.Now().Add(24 * time.Hour),
     })
 
@@ -70,13 +70,34 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
     // Retrieve the current session
-    sess, _ := session.GetSession(r)
+    sess, err := session.GetSession(r)
+    if err != nil {
+        http.Error(w, "Failed to get session", http.StatusInternalServerError)
+        return
+    }
 
     // Clear all session values
     sess.Values = make(map[interface{}]interface{})
 
+    // Set the MaxAge to -1 to delete the session cookie
+    sess.Options.MaxAge = -1
+
     // Save the updated session
-    session.SaveSession(w, r, sess)
+    err = session.SaveSession(w, r, sess)
+    if err != nil {
+        http.Error(w, "Failed to save session", http.StatusInternalServerError)
+        return
+    }
+
+    // Delete the user ID cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "userId",
+        Value:    "",
+        Path:     "/",
+        MaxAge:   -1,
+        HttpOnly: false,
+        Secure:   true,
+    })
 
     // Respond to the client
     w.WriteHeader(http.StatusOK)
@@ -84,3 +105,4 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
         "message": "Logged out successfully",
     })
 }
+

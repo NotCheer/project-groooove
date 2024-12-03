@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/UTSCC09/project-groooove/backend/internal/db"
@@ -45,21 +46,34 @@ func main() {
 	router.HandleFunc("/api/login", apphandlers.LoginHandler).Methods("POST")
 	router.HandleFunc("/api/oauth/google", apphandlers.GoogleOAuthHandler).Methods("POST")
 	router.HandleFunc("/api/signup", apphandlers.CreateUser).Methods("POST")
-	router.HandleFunc("/api/logout", apphandlers.LogoutHandler).Methods("GET")
+	router.HandleFunc("/api/signout", apphandlers.LogoutHandler).Methods("GET")
 
 	// Health check route
 	router.HandleFunc("/api/health", apphandlers.HealthCheckHandler).Methods("GET")
 
 	// Setup CORS
-	cors := handlers.CORS(
-        		handlers.AllowedOrigins([]string{"http://34.130.164.179:3000", "http://groooove.me:3000", "https://groooove.me", "http://groooove.me"}),
-        		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
-        		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
-        		handlers.AllowCredentials(),
-        	)
+	router.HandleFunc("/api/csrf-token", func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("X-CSRF-Token", csrf.Token(r))
+            w.WriteHeader(http.StatusOK)
+        }).Methods("GET")
 
-        log.Printf("session_key: %s\n gClientID: %s\n, gClientSecret: %s\n", os.Getenv("SESSION_KEY"),
-         os.Getenv("GOOGLE_OAUTH_CLIENT_ID"), os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"))
+    cors := handlers.CORS(
+         handlers.AllowedOrigins([]string{
+              "http://34.130.164.179:3000",
+              "http://groooove.me:3000",
+              "https://groooove.me",
+              "http://groooove.me",
+         }),
+            handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+            handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "X-CSRF-Token"}),
+            handlers.AllowCredentials(),
+        )
 
-	log.Fatal(http.ListenAndServe(":8080", cors(router)))
+    csrfMiddleware := csrf.Protect(
+            []byte(os.Getenv("CSRF_SECRET")),
+            csrf.Secure(false), // Set true in production with HTTPS
+            csrf.Path("/"), // Limit CSRF token scope
+        )
+
+	log.Fatal(http.ListenAndServe(":8080", cors(csrfMiddleware(router))))
 }

@@ -265,3 +265,16 @@ export const updateRating = async (loopId: number, rating: number) => {
     throw `Unexpected error: ${err}`;
   }
 };
+
+// Fetch and set CSRF token
+const fetchCsrfToken = async () => {
+  const response = await apiClient.get("/csrf-token");
+  const csrfToken = response.headers["x-csrf-token"];
+  if (csrfToken) {
+    apiClient.defaults.headers.common["X-CSRF-Token"] = csrfToken;
+    console.log("CSRF token set up")
+  }
+};
+
+// Initialize CSRF token once on app load
+fetchCsrfToken().catch(console.error);
