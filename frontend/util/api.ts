@@ -2,7 +2,7 @@ import axios, { isAxiosError } from "axios";
 import { CodeResponse } from "@react-oauth/google";
 import Cookies from "js-cookie";
 
-import { BasicUser, LoopInfoJson, LoopJson, PagedLoops } from "@/types";
+import {BasicUser, DetailedUser, LoopInfoJson, LoopJson, PagedLoops} from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "/api";
 
@@ -118,9 +118,35 @@ export const getLoops = async (
   }
 };
 
+export const getLoopsByUserId = async (page: number, userId: number) => {
+  try {
+    const { data } = await apiClient.get<PagedLoops>(`/loops?page=${page}&userId=${userId}`);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
 export const getUserById = async (id: number) => {
   try {
     const { data } = await apiClient.get<BasicUser>(`/users/${id}`);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export const getDetailedUserById = async (id: number) => {
+  try {
+    const { data } = await apiClient.get<DetailedUser>(`/users/${id}?type=detailed`);
 
     return data;
   } catch (err) {

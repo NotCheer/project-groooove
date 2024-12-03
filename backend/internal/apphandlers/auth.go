@@ -3,11 +3,12 @@ package apphandlers
 import (
     "encoding/json"
     "net/http"
+    "strconv"
+    "time"
+
     "github.com/UTSCC09/project-groooove/backend/internal/db"
     "github.com/UTSCC09/project-groooove/backend/internal/models"
     "github.com/UTSCC09/project-groooove/backend/internal/session"
-
-
     "golang.org/x/crypto/bcrypt"
 )
 
@@ -49,6 +50,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     sess.Values["userId"] = userID
 
     session.SaveSession(w, r, sess)
+
+    // Set user ID as a secure cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "userId",
+        Value:    strconv.Itoa(userID),
+        Path:     "/",
+        HttpOnly: false,
+        Secure:   false,
+        Expires:  time.Now().Add(24 * time.Hour),
+    })
 
     // Respond with user ID
     json.NewEncoder(w).Encode(map[string]interface{}{

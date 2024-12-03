@@ -8,6 +8,8 @@ import (
     "context"
     "io/ioutil"
     "database/sql"
+    "strconv"
+    "time"
     "golang.org/x/oauth2"
     "golang.org/x/oauth2/google"
     "github.com/UTSCC09/project-groooove/backend/internal/session"
@@ -79,6 +81,16 @@ func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Failed to save session", http.StatusInternalServerError)
         return
     }
+
+    // Set user ID as a secure cookie
+    http.SetCookie(w, &http.Cookie{
+        Name:     "userId",
+        Value:    strconv.Itoa(userID),
+        Path:     "/",
+        HttpOnly: false,
+        Secure:   false,
+        Expires:  time.Now().Add(24 * time.Hour),
+    })
 
     json.NewEncoder(w).Encode(map[string]interface{}{
         "message": "Logged in successfully",

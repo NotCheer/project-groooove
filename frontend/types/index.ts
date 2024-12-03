@@ -25,4 +25,5 @@ export interface BasicUser {
 
 export interface DetailedUser extends BasicUser {
   avatar: string;
+  email: string;
 }

@@ -68,15 +68,33 @@ func GetUserNameByIDHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    var userName string
-    err = db.DB.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&userName)
-    if err == sql.ErrNoRows {
-        http.Error(w, "User not found", http.StatusNotFound)
-        return
-    } else if err != nil {
-        http.Error(w, "Internal server error", http.StatusInternalServerError)
-        return
-    }
+    // Check for query parameter
+    queryType := r.URL.Query().Get("type")
+    var userName, email string
 
-    json.NewEncoder(w).Encode(map[string]string{"username": userName})
+    if queryType == "detailed" {
+        // Include email in the query
+        err = db.DB.QueryRow("SELECT username, email FROM users WHERE id = $1", userID).Scan(&userName, &email)
+        if err == sql.ErrNoRows {
+            http.Error(w, "User not found", http.StatusNotFound)
+            return
+        } else if err != nil {
+            http.Error(w, "Internal server error", http.StatusInternalServerError)
+            return
+        }
+
+        json.NewEncoder(w).Encode(map[string]string{"username": userName, "email": email})
+    } else {
+        // Only fetch username
+        err = db.DB.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&userName)
+        if err == sql.ErrNoRows {
+            http.Error(w, "User not found", http.StatusNotFound)
+            return
+        } else if err != nil {
+            http.Error(w, "Internal server error", http.StatusInternalServerError)
+            return
+        }
+
+        json.NewEncoder(w).Encode(map[string]string{"username": userName})
+    }
 }
