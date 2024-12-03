@@ -48,9 +48,6 @@ export const emailLogin = async (
   try {
     const res = await apiClient.post<LoginResponse>("/login", credentials);
 
-    // TODO: remove me when backend is done!
-    Cookies.set("userId", res.data.user_id.toString());
-
     return res.data;
   } catch (error: any) {
     throw error.response?.data || { message: "Login failed" };
@@ -60,6 +57,8 @@ export const emailLogin = async (
 export const logout = async () => {
   try {
     const response = await apiClient.get<ApiResponse>("/signout");
+
+    Cookies.remove("userId");
 
     return response.data;
   } catch (error: any) {
