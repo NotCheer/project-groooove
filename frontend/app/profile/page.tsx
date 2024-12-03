@@ -1,57 +1,64 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import useSWR from "swr";
-import { CircularProgress } from "@nextui-org/react";
-import { PagedLoopList } from "@/components/paged-loop-list";
+import { Button, CircularProgress, Link } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
+
 import { ProfilePage } from "@/components/ProfilePage";
-import { getLoopsByUserId, getDetailedUserById } from "@/util/api";
+import { getDetailedUserById, logout } from "@/util/api";
 import { useUserId } from "@/hooks/useUserId";
 
 export default function UserLoop() {
-  const [page, setPage] = useState(1);
   const userId = useUserId();
+  const router = useRouter();
 
-  const { data, error, isLoading } = useSWR(
-    userId ? [page, "getLoops", userId] : null,
-    ([page, _, userId]) => getLoopsByUserId(page, userId)
+  const {
+    data: userData,
+    isLoading,
+    error: userError,
+  } = useSWR(userId ? ["getUser", userId] : null, () =>
+    getDetailedUserById(userId!),
   );
 
-  const { data: userData, error: userError } = useSWR(
-    userId ? ["getUser", userId] : null,
-    () => getDetailedUserById(userId)
-  );
-
-  useEffect(() => {
-    if (data !== undefined) {
-      setPage(data.page);
-    }
-  }, [data]);
-
-  if (error || userError) {
-    return <p>Failed to load: {error?.message || userError?.message}</p>;
+  if (userError) {
+    return <p>Failed to load: {userError?.message}</p>;
   }
 
-  if (isLoading || !userData) {
+  if (!userData || isLoading) {
     return <CircularProgress className="mx-auto" size="lg" />;
   }
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <>
-      <ProfilePage
-        name={userData.username}
-        email={userData.email}
-      />
-      {data?.loops?.length > 0 ? (
-        <PagedLoopList
-          loops={data.loops}
-          page={page}
-          setPage={setPage}
-          totalPages={data.totalPages}
-        />
-      ) : (
-        <p>You haven't made any loops yet.</p>
-      )}
+      <ProfilePage email={userData.email} name={userData.username} />
+      <div className="w-full flex flex-col items-center gap-4 pt-4">
+        <Button
+          as={Link}
+          color="primary"
+          href={`/user/${userId}`}
+          type="button"
+          variant="flat"
+        >
+          My loops
+        </Button>
+        <Button
+          color="danger"
+          type="button"
+          variant="flat"
+          onPress={handleLogout}
+        >
+          Log out
+        </Button>
+      </div>
     </>
   );
 }

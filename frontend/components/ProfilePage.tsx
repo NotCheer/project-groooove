@@ -1,20 +1,14 @@
-import { User, Card, CardBody, CardHeader, Avatar } from "@nextui-org/react";
+type Props = {
+  name: string;
+  email: string;
+};
 
-export const ProfilePage = ({ name, email, avatarSrc }) => {
+export const ProfilePage = ({ name, email }: Props) => {
   return (
-    <Card>
-      <CardHeader>
-        <User
-          name={name}
-          avatarProps={{
-            src: avatarSrc,
-            fallback: true
-          }}
-        />
-      </CardHeader>
-      <CardBody>
-        <p>Email: {email}</p>
-      </CardBody>
-    </Card>
+    <>
+      <p className="text-center font-bold text-2xl">Username: {name}</p>
+      <p className="text-center font-bold text-2xl">Email: {email}</p>
+    </>
   );
 };
+

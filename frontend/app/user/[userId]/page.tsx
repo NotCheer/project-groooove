@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import { Accordion, AccordionItem, CircularProgress } from "@nextui-org/react";
+import { CircularProgress } from "@nextui-org/react";
+
 import { PagedLoopList } from "@/components/paged-loop-list";
 import { getLoopsByUserId, getUserById } from "@/util/api";
 
@@ -12,15 +13,16 @@ type Prop = {
   };
 };
 
-export default function userLoop({ params: { userId } }: Prop) {
+export default function UserLoop({ params: { userId } }: Prop) {
   const [page, setPage] = useState(1);
-  const { data, error, isLoading } = useSWR([page, "getLoops"], ([page, _]) =>
-    getLoopsByUserId(page, userId),
+  const { data, error, isLoading } = useSWR(
+    [page, userId, "getLoops"],
+    ([page, id, _]) => getLoopsByUserId(page, id),
   );
 
   const { data: userData, error: userError } = useSWR(
-    ["getUser", userId],
-    () => getUserById(userId)
+    [userId, "gerUserById"],
+    ([id, _]) => getUserById(id),
   );
 
   useEffect(() => {
@@ -40,7 +42,9 @@ export default function userLoop({ params: { userId } }: Prop) {
   return (
     data && (
       <>
-        <p>Welcome to {userData.username}'s collection</p>
+        <p className="text-2xl font-bold text-center py-6">
+          {userData.username}&apos;s Loops
+        </p>
         <PagedLoopList
           loops={data.loops}
           page={page}
