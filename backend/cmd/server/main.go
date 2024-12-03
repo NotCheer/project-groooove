@@ -34,6 +34,7 @@ func main() {
 	authRouter.HandleFunc("/loops/{id}", apphandlers.UpdateLoop).Methods("PUT")
 	authRouter.HandleFunc("/loops/{id}", apphandlers.DeleteLoop).Methods("DELETE")
 	authRouter.HandleFunc("/loops/rate/{id}", apphandlers.RateLoop).Methods("POST")
+	authRouter.HandleFunc("/loops/rate/{id}", apphandlers.UpdateRating).Methods("PUT")
 	authRouter.HandleFunc("/loops/rate/{id}", apphandlers.GetUserRating).Methods("GET")
 
 	// Session test routes

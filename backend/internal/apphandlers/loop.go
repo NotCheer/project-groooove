@@ -338,8 +338,8 @@ func RateLoop(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if rateReq.Rating < 1 || rateReq.Rating > 5 {
-        http.Error(w, "Rating must be between 1 and 5", http.StatusBadRequest)
+    if rateReq.Rating < 1 || rateReq.Rating > 10 {
+        http.Error(w, "Rating must be between 1 and 10", http.StatusBadRequest)
         return
     }
 
@@ -390,6 +390,89 @@ func RateLoop(w http.ResponseWriter, r *http.Request) {
 
     w.WriteHeader(http.StatusNoContent)
 }
+
+func UpdateRating(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPut {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    params := mux.Vars(r)
+    loopID, err := strconv.Atoi(params["id"])
+    if err != nil {
+        http.Error(w, "Invalid loop ID", http.StatusBadRequest)
+        return
+    }
+
+    var rateReq models.RateLoopRequest
+    if err := json.NewDecoder(r.Body).Decode(&rateReq); err != nil {
+        http.Error(w, "Invalid input", http.StatusBadRequest)
+        return
+    }
+
+    if rateReq.Rating < 1 || rateReq.Rating > 10 {
+        http.Error(w, "Rating must be between 1 and 10", http.StatusBadRequest)
+        return
+    }
+
+    sess, err := session.GetSession(r)
+    if err != nil {
+        http.Error(w, "Session error", http.StatusInternalServerError)
+        return
+    }
+
+    email, ok := sess.Values["email"].(string)
+    if !ok {
+        http.Error(w, "Invalid session data", http.StatusUnauthorized)
+        return
+    }
+
+    var userID int
+    err = db.DB.QueryRow("SELECT id FROM users WHERE email = $1", email).Scan(&userID)
+    if err != nil {
+        http.Error(w, "User not found", http.StatusNotFound)
+        return
+    }
+
+    // Update the user's rating for the loop
+    result, err := db.DB.Exec(`
+        UPDATE user_ratings
+        SET rating = $1
+        WHERE user_id = $2 AND loop_id = $3`,
+        rateReq.Rating, userID, loopID,
+    )
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    if rowsAffected == 0 {
+        http.Error(w, "Rating not found", http.StatusNotFound)
+        return
+    }
+
+    // Update the loop's average rating and rating count
+    _, err = db.DB.Exec(`
+        UPDATE loops
+        SET rating = (SELECT AVG(rating) FROM user_ratings WHERE loop_id = $1),
+            ratingcount = (SELECT COUNT(*) FROM user_ratings WHERE loop_id = $1)
+        WHERE id = $1`,
+        loopID,
+    )
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusNoContent)
+}
+
 
 func GetUserRating(w http.ResponseWriter, r *http.Request) {
     // Extract loop ID from the URL
