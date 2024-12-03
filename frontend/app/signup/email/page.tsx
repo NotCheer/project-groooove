@@ -45,6 +45,20 @@ export default function EmailSignUp() {
         onSubmit={handleSubmit(onSubmit)}
       >
         <Input
+          {...register("username", {
+            required: "Please enter your username",
+            minLength: {
+              value: 3,
+              message: "Username must be at least 3 characters long",
+            },
+          })}
+          isRequired
+          errorMessage={errors.username?.message}
+          isInvalid={errors.username !== undefined}
+          label="Username"
+          type="text"
+        />
+        <Input
           {...register("email", {
             required: "Please enter your email",
             validate: (email) => {
