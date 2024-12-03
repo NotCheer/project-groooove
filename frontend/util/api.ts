@@ -51,7 +51,9 @@ export const emailLogin = async (
   }
 };
 
-export const emailSignUp = async (userData: SignUpRequest): Promise<ApiResponse> => {
+export const emailSignUp = async (
+  userData: SignUpRequest,
+): Promise<ApiResponse> => {
   try {
     const response = await apiClient.post<ApiResponse>("/signup", userData);
 
@@ -97,9 +99,15 @@ export const getLoopById = async (id: number) => {
   }
 };
 
-export const getLoops = async (page: number) => {
+export const getLoops = async (
+  page: number,
+  sortBy: string = "createdAt",
+  order: string = "desc",
+) => {
   try {
-    const { data } = await apiClient.get<PagedLoops>(`/loops?page=${page}`);
+    const { data } = await apiClient.get<PagedLoops>(
+      `/loops?page=${page}&sortBy=${sortBy}&order=${order}`,
+    );
 
     return data;
   } catch (err) {
@@ -132,6 +140,76 @@ export interface CreateLoopRequest {
 export const createLoop = async (loopData: CreateLoopRequest) => {
   try {
     const { data } = await apiClient.post<LoopInfoJson>(`/loops`, loopData);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export interface UpdateLoopRequest extends CreateLoopRequest {}
+
+export const updateLoopById = async (
+  id: number,
+  loopData: UpdateLoopRequest,
+) => {
+  try {
+    const { data } = await apiClient.put<LoopInfoJson>(
+      `/loops/${id}`,
+      loopData,
+    );
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export const createRating = async (loopId: number, rating: number) => {
+  try {
+    const { data } = await apiClient.post<LoopInfoJson>(
+      `/loops/rate/${loopId}`,
+      { rating },
+    );
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export interface Rating {
+  rating: number | null;
+}
+
+export const getRating = async (loopId: number) => {
+  try {
+    const { data } = await apiClient.get<Rating>(`/loops/rate/${loopId}`);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export const updateRating = async (loopId: number, rating: number) => {
+  try {
+    const { data } = await apiClient.put<LoopInfoJson>(
+      `/loops/rate/${loopId}`,
+      { rating },
+    );
 
     return data;
   } catch (err) {
