@@ -170,3 +170,52 @@ export const updateLoopById = async (
     throw `Unexpected error: ${err}`;
   }
 };
+
+export const createRating = async (loopId: number, rating: number) => {
+  try {
+    const { data } = await apiClient.post<LoopInfoJson>(
+      `/loops/rate/${loopId}`,
+      { rating },
+    );
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export interface Rating {
+  rating: number | null;
+}
+
+export const getRating = async (loopId: number) => {
+  try {
+    const { data } = await apiClient.get<Rating>(`/loops/rate/${loopId}`);
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
+
+export const updateRating = async (loopId: number, rating: number) => {
+  try {
+    const { data } = await apiClient.put<LoopInfoJson>(
+      `/loops/rate/${loopId}`,
+      { rating },
+    );
+
+    return data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      throw err.message;
+    }
+    throw `Unexpected error: ${err}`;
+  }
+};
