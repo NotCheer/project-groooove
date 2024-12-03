@@ -88,7 +88,7 @@ func GoogleOAuthHandler(w http.ResponseWriter, r *http.Request) {
         Value:    strconv.Itoa(userID),
         Path:     "/",
         HttpOnly: false,
-        Secure:   false,
+        Secure:   true,
         Expires:  time.Now().Add(24 * time.Hour),
     })
 
