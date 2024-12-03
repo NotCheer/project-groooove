@@ -6,10 +6,10 @@ import {
   Tooltip,
   useDisclosure,
 } from "@nextui-org/react";
+import NextLink from "next/link";
 
-import { RateModal } from "./rate-modal";
-import { PlayButton } from "./play-button";
-
+import { RateModal } from "@/components/rate-modal";
+import { PlayButton } from "@/components/play-button";
 import { Sequencer } from "@/components/sequencer";
 import { LoopInfoJson } from "@/types";
 import { useUserId } from "@/hooks/useUserId";
@@ -46,10 +46,18 @@ export const LoopPlayer = ({
           <div className="flex flex-row justify-between items-center gap-4">
             <PlayButton playing={playing} setPlaying={setPlaying} />
             <div>
-              <p className="font-bold text-lg/none pt-1">{loopInfo.title}</p>
+              <NextLink
+                className="hover:opacity-80"
+                href={`/loop/${loopInfo.id}`}
+              >
+                <p className="font-bold text-lg/none pt-1">{loopInfo.title}</p>
+              </NextLink>
               <p className="text-sm leading-inherit">
                 by{" "}
-                <Link className="font-semibold text-sm/none">
+                <Link
+                  className="font-semibold text-sm/none"
+                  href={`/user/${loopInfo.author.id}`}
+                >
                   {loopInfo.author.username}
                 </Link>
               </p>
@@ -80,12 +88,14 @@ export const LoopPlayer = ({
               </div>
             )}
           </div>
-          <Sequencer
-            bpm={loopInfo.bpm}
-            loop={loopInfo.loop}
-            playing={playing}
-            setLoop={() => {}}
-          />
+          <NextLink className="hover:opacity-95" href={`/loop/${loopInfo.id}`}>
+            <Sequencer
+              bpm={loopInfo.bpm}
+              loop={loopInfo.loop}
+              playing={playing}
+              setLoop={() => {}}
+            />
+          </NextLink>
         </CardBody>
       </Card>
     </>

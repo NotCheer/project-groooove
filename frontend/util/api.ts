@@ -51,7 +51,9 @@ export const emailLogin = async (
   }
 };
 
-export const emailSignUp = async (userData: SignUpRequest): Promise<ApiResponse> => {
+export const emailSignUp = async (
+  userData: SignUpRequest,
+): Promise<ApiResponse> => {
   try {
     const response = await apiClient.post<ApiResponse>("/signup", userData);
 
@@ -97,9 +99,15 @@ export const getLoopById = async (id: number) => {
   }
 };
 
-export const getLoops = async (page: number) => {
+export const getLoops = async (
+  page: number,
+  sortBy: string = "createdAt",
+  order: string = "desc",
+) => {
   try {
-    const { data } = await apiClient.get<PagedLoops>(`/loops?page=${page}`);
+    const { data } = await apiClient.get<PagedLoops>(
+      `/loops?page=${page}&sortBy=${sortBy}&order=${order}`,
+    );
 
     return data;
   } catch (err) {
