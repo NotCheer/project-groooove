@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LoopPlayer } from "./loop-player";
 
@@ -10,6 +10,10 @@ type Props = {
 
 export const LoopList = ({ loops }: Props) => {
   const [playingId, setPlayingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setPlayingId(null);
+  }, [loops]);
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-2xl">
